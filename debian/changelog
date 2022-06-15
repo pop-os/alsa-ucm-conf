@@ -1,4 +1,4 @@
-alsa-ucm-conf (1.2.6.3-1ubuntu2pop1) UNRELEASED; urgency=medium
+alsa-ucm-conf (1.2.7-1pop1) jammy; urgency=medium
 
   * Pull from Upstream
 
