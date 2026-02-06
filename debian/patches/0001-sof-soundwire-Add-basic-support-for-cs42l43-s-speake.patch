@@ -1,0 +1,46 @@
+From: Charles Keepax <ckeepax@opensource.cirrus.com>
+Date: Tue, 23 Apr 2024 16:43:05 +0100
+Subject: [PATCH] sof-soundwire: Add basic support for cs42l43's speaker
+
+Previous support was added for the mics and headset on cs42l43, expand
+this support with additional configuration for the speaker output.
+
+Link: https://lore.kernel.org/alsa-devel/20240423154305.2782347-1-ckeepax@opensource.cirrus.com/
+Signed-off-by: Charles Keepax <ckeepax@opensource.cirrus.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/035d9206cffdf7942352d2daf3c34dde491c01dc.patch
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2088403
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/sof-soundwire/cs42l43-spk.conf | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+ create mode 100644 ucm2/sof-soundwire/cs42l43-spk.conf
+
+--- /dev/null
++++ b/ucm2/sof-soundwire/cs42l43-spk.conf
+@@ -0,0 +1,25 @@
++# Use case Configuration for sof-soundwire card
++
++SectionDevice."Speaker" {
++	Comment "Speaker"
++
++	ConflictingDevice [
++		"Headphones"
++	]
++
++	EnableSequence [
++		cset "name='cs42l43 Speaker L Input 1' 'DP5RX1'"
++		cset "name='cs42l43 Speaker R Input 1' 'DP5RX2'"
++	]
++
++	DisableSequence [
++		cset "name='cs42l43 Speaker L Input 1' 'None'"
++		cset "name='cs42l43 Speaker R Input 1' 'None'"
++	]
++
++	Value {
++		PlaybackPriority 100
++		PlaybackPCM "hw:${CardId},0"
++		PlaybackMixerElem "cs42l43 Speaker Digital"
++	}
++}

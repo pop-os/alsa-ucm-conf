@@ -1,0 +1,214 @@
+From: Jack Yu <jack.yu@realtek.com>
+Date: Mon, 27 May 2024 13:21:55 +0800
+Subject: [PATCH] ucm2: soundwire: add rt722 SDCA device
+
+Add support of ucm to rt722 SDCA.
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/409
+Signed-off-by: Jack Yu <jack.yu@realtek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/ab2b4f13507717682bf3db6788d8390397d6cdda.patch
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2086250
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/codecs/rt722/init.conf           | 11 +++
+ ucm2/sof-soundwire/HiFi.conf          |  8 +++
+ ucm2/sof-soundwire/rt722.conf         | 97 +++++++++++++++++++++++++++
+ ucm2/sof-soundwire/sof-soundwire.conf | 53 +++++++++++++++
+ 4 files changed, 169 insertions(+)
+ create mode 100644 ucm2/codecs/rt722/init.conf
+ create mode 100644 ucm2/sof-soundwire/rt722.conf
+
+--- /dev/null
++++ b/ucm2/codecs/rt722/init.conf
+@@ -0,0 +1,11 @@
++# RT722-sdca specific volume control settings
++
++BootSequence [
++	cset "name='rt722 ADC 24 Mux' 'DMIC1'"
++	cset "name='rt722 ADC 25 Mux' 'DMIC2'"
++	cset "name='rt722 ADC 22 Mux' 'MIC2'"
++	cset "name='rt722 FU1E Capture Volume' 63"
++	cset "name='rt722 FU06 Playback Volume' 60"
++	cset "name='rt722 FU05 Playback Volume' 35"
++	cset "name='rt722 FU0F Capture Volume' 63"
++]
+--- a/ucm2/sof-soundwire/HiFi.conf
++++ b/ucm2/sof-soundwire/HiFi.conf
+@@ -8,6 +8,14 @@
+ 	Value.TQ "HiFi"
+ }
+ 
++If.multicodec {
++	Condition {
++		Type String
++		Empty "${var:MultiCodec1}"
++	}
++	False.Include.multicodec.File "/sof-soundwire/${var:MultiCodec1}.conf"
++}
++
+ If.spkdev {
+ 	Condition {
+ 		Type String
+--- /dev/null
++++ b/ucm2/sof-soundwire/rt722.conf
+@@ -0,0 +1,97 @@
++# Use case Configuration for sof-soundwire card
++
++If.codecmic {
++	Condition {
++		Type RegexMatch
++		Regex "(rt722(-sdca)?)"
++		String "${var:MultiMicShadow}"
++	}
++	True {
++		SectionDevice."Mic" {
++			Comment	"SoundWire microphones"
++
++			EnableSequence [
++				cset "name='rt722 FU1E Capture Switch' 1"
++			]
++
++			DisableSequence [
++				cset "name='rt722 FU1E Capture Switch' 0"
++			]
++
++			Value {
++				CapturePriority 100
++				CapturePCM "hw:${CardId},4"
++				CaptureSwitch "rt722 FU1E Capture Switch"
++				CaptureVolume "rt722 FU1E Capture Volume"
++				CaptureMixerElem "rt722 FU1E"
++			}
++		}
++	}
++}
++
++If.codecspk {
++	Condition {
++		Type RegexMatch
++		Regex "(rt722(-sdca)?)"
++		String "${var:MultiSpeakerShadow}"
++	}
++	True {
++		SectionDevice."Speaker" {
++			Comment "Speaker"
++
++			EnableSequence [
++				cset "name='Speaker Switch' on"
++			]
++
++			DisableSequence [
++				cset "name='Speaker Switch' off"
++			]
++
++			Value {
++				PlaybackPriority 100
++				PlaybackPCM "hw:${CardId},2"
++				PlaybackMixerElem "rt722 FU06"
++				PlaybackVolume "rt722 FU06 Playback Volume"
++			}
++		}
++	}
++}
++
++SectionDevice."Headphones" {
++	Comment	"Headphones"
++
++	EnableSequence [
++		cset "name='Headphone Switch' on"
++	]
++
++	DisableSequence [
++		cset "name='Headphone Switch' off"
++	]
++
++	Value {
++	      PlaybackPriority 200
++	      PlaybackPCM "hw:${CardId}"
++	      JackControl "Headphone Jack"
++	}
++}
++
++SectionDevice."Headset" {
++	Comment "Headset Microphone"
++
++	EnableSequence [
++		cset "name='rt722 FU0F Capture Switch' 1"
++	]
++
++	DisableSequence [
++		cset "name='rt722 FU0F Capture Switch' 0"
++	]
++
++	Value {
++		CapturePriority 200
++		CapturePCM "hw:${CardId},1"
++		JackControl "Headset Mic Jack"
++		CaptureSwitch "rt722 FU0F Capture Switch"
++		CaptureVolume "rt722 FU0F Capture Volume"
++		CaptureMixerElem "rt722 FU0F"
++	}
++}
+--- a/ucm2/sof-soundwire/sof-soundwire.conf
++++ b/ucm2/sof-soundwire/sof-soundwire.conf
+@@ -44,6 +44,59 @@
+ 	}
+ }
+ 
++DefineRegex.MultiCodec {
++	Regex "(rt722(-sdca)?)"
++	String "${var:SpeakerCodec1} ${var:HeadsetCodec1} ${var:MicCodec1}"
++}
++
++If.multi_init {
++	Condition {
++		Type String
++		Empty "${var:MultiCodec1} "
++	}
++	False {
++		Define {
++			MultiSpeakerShadow "${var:SpeakerCodec1}"
++			MultiMicShadow "${var:MicCodec1}"
++		}
++		Include.multi_init.File "/codecs/${var:MultiCodec1}/init.conf"
++	}
++}
++
++If.multi_speaker {
++	Condition {
++		Type RegexMatch
++		Regex "${var:SpeakerCodec1}"
++		String "${var:MultiCodec1}"
++	}
++	True {
++		Define.SpeakerCodec1 ""
++	}
++}
++
++If.multi_mic {
++	Condition {
++		Type RegexMatch
++		Regex "${var:MicCodec1}"
++		String "${var:MultiCodec1}"
++	}
++	True {
++		Define.MicCodec1 ""
++	}
++}
++
++If.multi_headset {
++	Condition {
++		Type RegexMatch
++		Regex "${var:HeadsetCodec1}"
++		String "${var:MultiCodec1}"
++	}
++	True {
++		Define.HeadsetCodec1 ""
++	}
++}
++
++
+ If.hs_init {
+ 	Condition {
+ 		Type RegexMatch

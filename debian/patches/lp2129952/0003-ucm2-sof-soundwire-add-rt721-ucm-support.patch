@@ -1,0 +1,144 @@
+From b4e9b243d0de6cea31432670530136f6f47af6a7 Mon Sep 17 00:00:00 2001
+From: Jack Yu <jack.yu@realtek.com>
+Date: Fri, 8 Aug 2025 14:21:55 +0800
+Subject: [PATCH] ucm2: sof-soundwire: add rt721 ucm support
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/600
+Signed-off-by: Jack Yu <jack.yu@realtek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: backport, https://github.com/alsa-project/alsa-ucm-conf/commit/b4e9b243d0de6cea31432670530136f6f47af6a7
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2129952
+---
+ ucm2/codecs/rt721/init.conf           | 14 ++++
+ ucm2/sof-soundwire/rt721.conf         | 95 +++++++++++++++++++++++++++
+ ucm2/sof-soundwire/sof-soundwire.conf |  2 +-
+ 3 files changed, 110 insertions(+), 1 deletion(-)
+ create mode 100644 ucm2/codecs/rt721/init.conf
+ create mode 100644 ucm2/sof-soundwire/rt721.conf
+
+--- /dev/null
++++ b/ucm2/codecs/rt721/init.conf
+@@ -0,0 +1,14 @@
++# RT721-sdca specific volume control settings
++
++BootSequence [
++	cset "name='rt721 ADC 07 R Mux' 'DMIC1 FE'"
++	cset "name='rt721 ADC 07 L Mux' 'DMIC1 RE'"
++	cset "name='rt721 ADC 10 R Mux' 'DMIC2 FE'"
++	cset "name='rt721 ADC 10 L Mux' 'DMIC2 RE'"
++	cset "name='rt721 ADC 09 Mux' 'MIC2'"
++	cset "name='rt721 FU1E Capture Volume' 63"
++	cset "name='rt721 FU06 Playback Volume' 87"
++	cset "name='rt721 FU05 Playback Volume' 87"
++	cset "name='rt721 FU0F Capture Volume' 63"
++	cset "name='rt721 FU33 Boost Volume' 1"
++]
+--- /dev/null
++++ b/ucm2/sof-soundwire/rt721.conf
+@@ -0,0 +1,95 @@
++# Use case Configuration for sof-soundwire card
++
++If.codecmic {
++	Condition {
++		Type RegexMatch
++		Regex "(rt721(-sdca)?)"
++		String "${var:MultiMicShadow}"
++	}
++	True {
++		SectionDevice."Mic" {
++			Comment	"SoundWire microphones"
++
++			EnableSequence [
++				cset "name='rt721 FU1E Capture Switch' 1"
++			]
++
++			DisableSequence [
++				cset "name='rt721 FU1E Capture Switch' 0"
++			]
++
++			Value {
++				CapturePriority 100
++				CapturePCM "hw:${CardId},4"
++				CaptureSwitch "rt721 FU1E Capture Switch"
++				CaptureVolume "rt721 FU1E Capture Volume"
++				CaptureMixerElem "rt721 FU1E"
++			}
++		}
++	}
++}
++
++If.codecspk {
++	Condition {
++		Type RegexMatch
++		Regex "(rt721(-sdca)?)"
++		String "${var:MultiSpeakerShadow}"
++	}
++	True {
++		SectionDevice."Speaker" {
++			Comment "Speaker"
++
++			EnableSequence [
++				cset "name='Speaker Switch' on"
++			]
++
++			DisableSequence [
++				cset "name='Speaker Switch' off"
++			]
++
++			Value {
++				PlaybackPriority 100
++				PlaybackPCM "hw:${CardId},2"
++			}
++		}
++	}
++}
++
++SectionDevice."Headphones" {
++	Comment	"Headphones"
++
++	EnableSequence [
++		cset "name='Headphone Switch' on"
++	]
++
++	DisableSequence [
++		cset "name='Headphone Switch' off"
++	]
++
++	Value {
++	      PlaybackPriority 200
++	      PlaybackPCM "hw:${CardId}"
++	      JackControl "Headphone Jack"
++	}
++}
++
++SectionDevice."Headset" {
++	Comment "Headset Microphone"
++
++	EnableSequence [
++		cset "name='rt721 FU0F Capture Switch' 1"
++	]
++
++	DisableSequence [
++		cset "name='rt721 FU0F Capture Switch' 0"
++	]
++
++	Value {
++		CapturePriority 200
++		CapturePCM "hw:${CardId},1"
++		JackControl "Headset Mic Jack"
++		CaptureSwitch "rt721 FU0F Capture Switch"
++		CaptureVolume "rt721 FU0F Capture Volume"
++		CaptureMixerElem "rt721 FU0F"
++	}
++}
+--- a/ucm2/sof-soundwire/sof-soundwire.conf
++++ b/ucm2/sof-soundwire/sof-soundwire.conf
+@@ -45,7 +45,7 @@
+ 		String "${CardComponents}"
+ 	}
+ 	MultiCodec {
+-		Regex "(rt712|rt722(-sdca)?)"
++		Regex "(rt712|rt721|rt722(-sdca)?)"
+ 		String "${var:SpeakerCodec1} ${var:HeadsetCodec1} ${var:MicCodec1}"
+ 	}
+ }

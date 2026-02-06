@@ -1,8 +1,224 @@
+alsa-ucm-conf (1.2.10-1ubuntu5.9) noble; urgency=medium
+
+  * Support Realtek audio solution ALC3329B+ALC1708B (LP: #2129952)
+    - d/p/lp2129952/0001-ucm2-sof-soundwire-add-rt712-VA-device.patch
+    - d/p/lp2129952/0002-ucm2-sof-soundwire-add-rt712-vb-device.patch
+    - d/p/lp2129952/0003-ucm2-sof-soundwire-add-rt721-ucm-support.patch
+    - d/p/lp2129952/0004-ucm2-sof-soundwire-support-rt713vb-codec.patch
+    - d/p/lp2129952/0005-ucm2-rt712-simplify-the-init-settings.patch
+    - d/p/lp2129952/0006-sof-soundwire-fix-for-sdca-variants-for-multi-codec.patch
+    - d/p/lp2129952/0007-sof-soundwire-second-fix-for-sdca-variants-for-multi.patch
+    - d/p/lp2129952/0008-rt713-add-mic-led-support.patch
+    - d/p/lp2129952/0009-sof-soundwire-third-fix-for-multi-codec.patch
+    - d/p/lp2129952/0010-ucm2-codecs-rt722-add-condition-to-SetLED-for-mic.patch
+
+ -- Kai-Chuan Hsieh <kaichuan.hsieh@canonical.com>  Tue, 27 Jan 2026 14:46:17 +0800
+
+alsa-ucm-conf (1.2.10-1ubuntu5.8) noble; urgency=medium
+
+  * Fix missing audio support for MediaTek Genio EVK platforms (LP: #2126737)
+    by creating the following patches based on upstream commits:
+    - d/p/0001-ucm2-MediaTek-mt8370-evk-Add-dynamic-configuration-f.patch
+    - d/p/0002-ucm2-MediaTek-mt8390-evk-Add-dynamic-configuration-f.patch
+    - d/p/0003-ucm2-MediaTek-mt8395-evk-Add-dynamic-configuration-f.patch
+    - d/p/0004-ucm2-MediaTek-mt8370-evk-Add-headset-jack-detection.patch
+    - d/p/0005-ucm2-MediaTek-mt8390-evk-Add-headset-jack-detection.patch
+    - d/p/0006-ucm2-MediaTek-mt8395-evk-Add-headset-jack-detection.patch
+    - d/p/0007-ucm2-MediaTek-mt8390-evk-Add-support-for-SOF.patch
+    - d/p/0008-ucm2-MediaTek-mt8365-evk-Add-SOF-support.patch
+    - d/p/0009-ucm2-MediaTek-mt8395-evk-Add-support-for-SOF.patch
+
+ -- Tzu-Hsien Kao <tzu-hsien.kao@canonical.com>  Fri, 05 Dec 2025 11:13:13 +0800
+
+alsa-ucm-conf (1.2.10-1ubuntu5.7) noble; urgency=medium
+
+  * Fix file mode of amd-soundwire.conf (LP: #2106394)
+    amd-soundwire.conf should be a symlink to sof-soundwire.conf
+
+ -- Atlas Yu <atlas.yu@canonical.com>  Tue, 10 Jun 2025 20:39:10 +0200
+
+alsa-ucm-conf (1.2.10-1ubuntu5.6) noble; urgency=medium
+
+  * Add LED support for cs42l43 and cs35l56 (LP: #2106394)
+    Some inapplicable patches were dropped in the previous upload. Now
+    we include all its dependencies to make it work.
+
+    Drop:
+    - d/p/0001-sof-soundwire-Add-LED-support-for-cs35l56-amplifiers.patch
+
+    Some upstream commits got modified due to contextual changes.
+    Add:
+    - d/p/0001-sof-soundwire-cs42l43-spk-Correct-PlaybackPCM-and-ro.patch
+    - d/p/0002-sof-soundwire-cs42l43-Correct-CapturePCM-and-routing.patch
+    - d/p/0003-ucm2-sof-soundwire-Correct-FixedBootSequence-for-dmi.patch
+    - d/p/0004-sof-soundwire-Split-cs42l43-dmic-initialisation.patch
+    - d/p/0005-sof-soundwire-Fix-cs42l43-dmic-initialisation.patch
+    - d/p/0006-common-add-led.conf-with-SetLED-macro-to-hide-implem.patch
+    - d/p/0007-ucm2-use-new-SetLED-macro-to-hide-the-implementation.patch
+    - d/p/0008-sof-soundwire-cs42l43-Drop-headset-mic-from-mic-mute.patch
+    - d/p/0009-sof-soundwire-Add-LED-support-for-cs35l56-amplifiers.patch
+    - d/p/0010-sof-soundwire-cs42l43-Switch-mixer-based-on-output-v.patch
+
+ -- Atlas Yu <atlas.yu@canonical.com>  Fri, 09 May 2025 10:21:48 +0800
+
+alsa-ucm-conf (1.2.10-1ubuntu5.5) noble; urgency=medium
+
+  [Atlas Yu]
+  * Add LED support for cs42l43 and cs35l56 (LP: #2106394)
+    Upstream commits got dropped/modified due to contextual changes.
+    - d/p/0001-sof-soundwire-Add-LED-support-for-cs35l56-amplifiers.patch
+
+  [Bin Li]
+  * Add rt713 & rt1318 LED control (LP: #2100732)
+    - d/p/0001-Turn-speaker-LED-accroding-to-rt1318-speaker-status.patch
+    - d/p/0002-sof-soundwire-rt1318-add-playback-control-switch.patch
+
+  [Chris Chiu]
+  * Change the default output volume of headphone for rt722 (LP: #2106464)
+    - d/p/0001-rt722-change-output-volume-of-headphone-to-0dB.patch
+
+ -- Bin Li <binli@ubuntu.com>  Tue, 15 Apr 2025 16:23:08 +0200
+
+alsa-ucm-conf (1.2.10-1ubuntu5.4) noble; urgency=medium
+
+  * Add codec Realtek rt722 and rt1320 support (LP: #2086250)
+    - d/p/0001-ucm2-soundwire-add-rt722-SDCA-device.patch
+    - d/p/0002-sof-soundwire-fix-missing-MultiCodec1-initialization.patch
+    - d/p/0003-ucm2-sof-soundwire-add-RT1320-amplifier.patch
+    - d/p/0004-rt722-add-mic-led-support.patch
+  * Add soundwire support for AMD platforms (LP: #2089273)
+    - d/p/0001-amd-soundwire-add-support-for-AMD-generic-legacy-mac.patch
+
+ -- Chris Chiu <chris.chiu@canonical.com>  Tue, 03 Dec 2024 13:53:32 +0800
+
+alsa-ucm-conf (1.2.10-1ubuntu5.3) noble; urgency=medium
+
+  * Added patch to fix missing digital speaker on Dell Tarako (LP: #2088403)
+    - d/p/0001-sof-soundwire-Add-basic-support-for-cs42l43-s-speake.patch
+
+ -- Chris Chiu <chris.chiu@canonical.com>  Fri, 15 Nov 2024 17:02:01 +0800
+
+alsa-ucm-conf (1.2.10-1ubuntu5.2) noble; urgency=medium
+
+  * Added patches for CS42L43+CS35L56 soundwire support (LP: #2069760)
+    - d/p/0001-sof-soundwire-fix-rt1318-config-typo-in-rt1318spk-ma.patch
+    - d/p/0002-sof-soundwire-fix-rt1318-config-copy-n-paste-error-i.patch
+    - d/p/0003-sof-soundwire-rt1308-Fix-single-amp-configuration.patch
+    - d/p/0004-sof-soundwire-rt1316-rt1318-fix-channel-selection-fo.patch
+    - d/p/0001-sof-soundwire-Add-missing-match-for-cs42l43-speakers.patch
+    - d/p/0002-sof-soundwire-Add-support-for-cs42l43-cs35l56-bridge.patch
+    - d/p/0001-sof-soundwire-Change-map-control-names-to-make-them-.patch
+    - d/p/0002-sof-soundwire-Add-sequence-for-controlling-Mic-Mute-.patch
+  * Added patches for AMD micmute LED (LP: #2085067)
+    - d/p/0001-acppdmmach-add-support-for-ACP-7.0.patch
+
+ -- Chris Chiu <chris.chiu@canonical.com>  Tue, 12 Nov 2024 10:26:07 +0800
+
+alsa-ucm-conf (1.2.10-1ubuntu5.1) noble; urgency=medium
+
+  * Added changes:
+    - d/p/0001-sof-soundwire-Use-one-file-for-speaker-codec-initial.patch
+    - d/p/0002-sof-soundwire-Add-basic-support-for-basic-cs35l56-co.patch
+    - d/p/0003-sof-soundwire-Add-basic-support-for-cs42l43.patch
+      - Soundwire support for CS42L43 and CS35L56 on Intel MTL
+        (LP: #2069760)
+
+ -- Chris Chiu <chris.chiu@canonical.com>  Tue, 02 Jul 2024 22:32:17 +0800
+
+alsa-ucm-conf (1.2.10-1ubuntu5) noble; urgency=medium
+
+  * Actual rebuild against libasound2t64; the dependency is hardcoded.
+
+ -- Julian Andres Klode <juliank@ubuntu.com>  Fri, 22 Mar 2024 17:09:13 +0100
+
+alsa-ucm-conf (1.2.10-1ubuntu4) noble; urgency=medium
+
+  * No-change rebuild against libasound2t64
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Tue, 12 Mar 2024 06:28:57 +0000
+
+alsa-ucm-conf (1.2.10-1ubuntu3) noble; urgency=medium
+
+  * Dropped changes:
+    - d/p/0001-Add-initial-support-for-MediaTek-mt8390-evk-and-mt83.patch
+      - replace it with patches accepted by upstream
+  * Added changes:
+    - d/p/0001-ucm2-MediaTek-mt8390-evk-Add-alsa-ucm-support.patch
+    - d/p/0002-ucm2-MediaTek-mt8395-evk-Add-alsa-ucm-support.patch
+    - d/p/0003-ucm2-MediaTek-mt8370-evk-Add-alsa-ucm-support.patch
+    - d/p/0001-ucm2-conf.d-mt8370-evk-Fix-the-type-of-mt8370-evk.co.patch
+    - d/p/0001-ucm-MediaTek-mt8395-evk-Add-HDMIRX-config.patch
+      - add supports for MediaTek mt8390-evk, mt8395-evk, and mt8370-evk.
+      - fix a file type issue on the mt8370-evk config
+      - add mt8395 HDMI RX support
+        (LP: #2051199)
+
+ -- Ethan Hsieh <ethan.hsieh@canonical.com>  Thu, 25 Jan 2024 13:29:18 +0800
+
+alsa-ucm-conf (1.2.10-1ubuntu2) noble; urgency=medium
+
+  * d/p/0001-Add-initial-support-for-MediaTek-Genio-boards.patch
+    - fix typo to make the patch work on mtk8390-evk (lp: #2049327)
+
+ -- Zhaoxuan Zhai <zhai.zhaoxuan@canonical.com>  Tue, 16 Jan 2024 11:23:07 +0100
+
+alsa-ucm-conf (1.2.10-1ubuntu1) noble; urgency=medium
+
+  * Merge with Debian unstable. Remaining changes:
+    - d/p/0001-Add-initial-support-for-MediaTek-mt8390-evk-and-mt83.patch
+      - add initial support for MediaTek mt8390-evk and mt8395-evk
+        (LP: 2000228)
+  * Dropped changes [all in upstream 1.2.10]:
+    - d/p/0001-ucm2-Qualcomm-sc8280xp-fix-device-numbers.patch
+      - ucm2: Qualcomm: sc8280xp: fix device numbers
+        (LP: 2036731)
+    - d/p/0001-acp63-add-initial-support-for-AMD-Pink-Sardine-ACP63.patch
+      d/p/0002-acp63.conf-use-symbolic-link.patch
+      d/p/0003-acp62-add-initial-support-for-AMD-ACP-v6.2-RPL.patch
+       - Backport patches to add support AMD ACP RPL and Pink Sardine.
+         (LP: 2025353)
+  * Added changes
+    - added headers and background info to
+      d/p/0001-Add-initial-support-for-MediaTek-mt8390-evk-and-mt83.patch
+
+  [Artur Pak]
+  * d/p/0001-ucm2-soundwire-add-rt713-SDCA-device.patch:
+    - Backport patch to add rt713 SDCA device
+      (LP: #2042902)
+
+ -- Christian Ehrhardt <christian.ehrhardt@canonical.com>  Fri, 24 Nov 2023 09:12:05 +0100
+
 alsa-ucm-conf (1.2.10-1) unstable; urgency=medium
 
   * New upstream release.
 
  -- Jordi Mallach <jordi@debian.org>  Wed, 13 Sep 2023 01:12:05 +0200
+
+alsa-ucm-conf (1.2.9-1ubuntu3) mantic; urgency=medium
+
+  * d/p/0001-ucm2-Qualcomm-sc8280xp-fix-device-numbers.patch
+    - ucm2: Qualcomm: sc8280xp: fix device numbers
+      (LP: #2036731)
+
+ -- Juerg Haefliger <juerg.haefliger@canonical.com>  Wed, 20 Sep 2023 13:37:38 +0200
+
+alsa-ucm-conf (1.2.9-1ubuntu2) mantic; urgency=medium
+
+  * d/p/0001-Add-initial-support-for-MediaTek-mt8390-evk-and-mt83.patch
+    - add initial support for MediaTek mt8390-evk and mt8395-evk
+      (LP: #2000228)
+
+ -- Ethan Hsieh <ethan.hsieh@canonical.com>  Mon, 18 Sep 2023 16:13:56 +0800
+
+alsa-ucm-conf (1.2.9-1ubuntu1) mantic; urgency=medium
+
+  * d/p/0001-acp63-add-initial-support-for-AMD-Pink-Sardine-ACP63.patch
+    d/p/0002-acp63.conf-use-symbolic-link.patch
+    d/p/0003-acp62-add-initial-support-for-AMD-ACP-v6.2-RPL.patch
+     - Backport patches to add support AMD ACP RPL and Pink Sardine.
+       (LP: #2025353)
+
+ -- Juerg Haefliger <juerg.haefliger@canonical.com>  Thu, 06 Jul 2023 15:29:27 +0200
 
 alsa-ucm-conf (1.2.9-1) unstable; urgency=medium
 

@@ -1,0 +1,36 @@
+From: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+Date: Mon, 11 Mar 2024 11:02:00 +0200
+Subject: sof-soundwire: rt1308: Fix single amp configuration
+
+If the device have single rt1308 amp then the codec's Channel Select should
+be set to "LR" and not to "LL". "LL" is only valid if we have 2 amps, in
+that case one is the Left and the other is the Right channel.
+
+This fixes for example Dell Latitude 9520 which only played on the Left
+speaker, Right is silent.
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/402
+Signed-off-by: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+Suggested-by: Jaroslav Kysela <perex@perex.cz>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commits/9e29f9e27f4e27dce40d8d6803031bb4f7be3c48
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2069760
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/sof-soundwire/rt1308.conf | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+--- a/ucm2/sof-soundwire/rt1308.conf
++++ b/ucm2/sof-soundwire/rt1308.conf
+@@ -28,8 +28,9 @@
+ SectionDevice."Speaker" {
+ 	Comment	"Speaker"
+ 
+-	Macro.num1.rt1308spk { ForAmps "[12]" Amp 1 Sel LL }
+-	Macro.num2.rt1308spk { ForAmps "2" Amp 2 Sel RR }
++	Macro.num1.rt1308spk { ForAmps "1" Amp 1 Sel LR }
++	Macro.num2.rt1308spk { ForAmps "2" Amp 1 Sel LL }
++	Macro.num3.rt1308spk { ForAmps "2" Amp 2 Sel RR }
+ 
+ 	EnableSequence [
+ 		cset "name='Speaker Switch' on"

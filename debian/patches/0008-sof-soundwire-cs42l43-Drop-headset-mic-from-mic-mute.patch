@@ -1,0 +1,37 @@
+From 79c9e8f7e169addc779721d2daf57ac2a049094f Mon Sep 17 00:00:00 2001
+From: Maciej Strozek <mstrozek@opensource.cirrus.com>
+Date: Fri, 28 Mar 2025 13:48:08 +0000
+Subject: [PATCH 223/237] sof-soundwire: cs42l43: Drop headset mic from mic
+ mute LED
+
+As per conversation in [1], let headsets be dropped from LED bindings.
+
+[1]: https://github.com/alsa-project/alsa-ucm-conf/pull/512
+
+Link: https://lore.kernel.org/alsa-devel/20250328134809.3008238-1-mstrozek@opensource.cirrus.com/
+Signed-off-by: Maciej Strozek <mstrozek@opensource.cirrus.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/79c9e8f7e169addc779721d2daf57ac2a049094f
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2106394
+Signed-off-by: Atlas Yu <atlas.yu@canonical.com>
+---
+ ucm2/codecs/cs42l43/init.conf | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/ucm2/codecs/cs42l43/init.conf b/ucm2/codecs/cs42l43/init.conf
+index 0e987c2..c0fa863 100644
+--- a/ucm2/codecs/cs42l43/init.conf
++++ b/ucm2/codecs/cs42l43/init.conf
+@@ -10,9 +10,3 @@ LibraryConfig.remap.Config {
+ 		}
+ 	}
+ }
+-
+-BootSequence [
+-	cset "name='cs42l43 Decimator 1 Switch' 0"
+-]
+-
+-Macro [{ SetLED { LED="mic" Action="attach" CtlId="cs42l43 Decimator 1 Switch" } }]
+-- 
+2.47.2
+

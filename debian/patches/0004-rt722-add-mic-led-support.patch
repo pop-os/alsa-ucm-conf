@@ -1,0 +1,25 @@
+From: Shuming Fan <shumingf@realtek.com>
+Date: Wed, 25 Sep 2024 10:16:27 +0800
+Subject: [PATCH] rt722: add mic led support
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/443
+Signed-off-by: Shuming Fan <shumingf@realtek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/c83452ed33d76a22fbe034df53a45f6fa435f75d.patch
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2086250
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/codecs/rt722/init.conf | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+--- a/ucm2/codecs/rt722/init.conf
++++ b/ucm2/codecs/rt722/init.conf
+@@ -9,3 +9,8 @@
+ 	cset "name='rt722 FU05 Playback Volume' 35"
+ 	cset "name='rt722 FU0F Capture Volume' 63"
+ ]
++
++FixedBootSequence [
++	exec "-/sbin/modprobe snd_ctl_led"
++	sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:rt722 FU1E Capture Switch"
++]

@@ -1,0 +1,72 @@
+From: Shuming Fan <shumingf@realtek.com>
+Date: Wed, 19 Feb 2025 14:15:17 +0800
+Subject: [PATCH] Turn speaker LED accroding to rt1318 speaker status
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/512
+Signed-off-by: Derek Fang <derek.fang@realtek.com>
+Signed-off-by: Shuming Fan <shumingf@realtek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/8b42ca5e52cd3a7d5bf468db12fa3be384415d1b.patch
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2100732
+Signed-off-by: Bin Li <binli@ubuntu.com>
+---
+ ucm2/codecs/rt1318/init.conf          | 26 ++++++++++++++++++++++++++
+ ucm2/sof-soundwire/sof-soundwire.conf |  8 ++++++++
+ 2 files changed, 34 insertions(+)
+ create mode 100644 ucm2/codecs/rt1318/init.conf
+
+diff --git a/ucm2/codecs/rt1318/init.conf b/ucm2/codecs/rt1318/init.conf
+new file mode 100644
+index 0000000..b1d6c28
+--- /dev/null
++++ b/ucm2/codecs/rt1318/init.conf
+@@ -0,0 +1,26 @@
++# RT1318 specific switch control settings
++
++If.oneAmp {
++	Condition {
++		Type ControlExists
++		Control "name='rt1318-1 DAC Switch'"
++	}
++	True {
++		FixedBootSequence [
++			exec "-/sbin/modprobe snd_ctl_led"
++			sysw "-/class/sound/ctl-led/speaker/card${CardNumber}/attach:rt1318-1 DAC Switch"
++		]
++	}
++}
++
++If.twoAmps {
++	Condition {
++		Type ControlExists
++		Control "name='rt1318-2 DAC Switch'"
++	}
++	True {
++		FixedBootSequence [
++			sysw "-/class/sound/ctl-led/speaker/card${CardNumber}/attach:rt1318-2 DAC Switch"
++		]
++	}
++}
+diff --git a/ucm2/sof-soundwire/sof-soundwire.conf b/ucm2/sof-soundwire/sof-soundwire.conf
+index f458815..1cddfbf 100644
+--- a/ucm2/sof-soundwire/sof-soundwire.conf
++++ b/ucm2/sof-soundwire/sof-soundwire.conf
+@@ -102,6 +102,14 @@ If.multi_headset {
+ 	}
+ }
+ 
++If.spk_init_rt1318 {
++	Condition {
++		Type RegexMatch
++		Regex "(rt1318(-1)?)"
++		String "${var:SpeakerCodec1}"
++	}
++	True.Include.spk_init.File "/codecs/${var:SpeakerCodec1}/init.conf"
++}
+ 
+ If.hs_init {
+ 	Condition {
+-- 
+2.47.2
+

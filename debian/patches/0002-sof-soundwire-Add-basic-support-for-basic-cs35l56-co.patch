@@ -1,0 +1,62 @@
+From: Charles Keepax <ckeepax@opensource.cirrus.com>
+Date: Wed, 6 Dec 2023 16:46:12 +0000
+Subject: [PATCH 2/3] sof-soundwire: Add basic support for basic cs35l56
+ configurations
+
+cs35l56 is a boosted speaker amp, add UCM support for configurations
+with up to 8 amps.
+
+Signed-off-by: Charles Keepax <ckeepax@opensource.cirrus.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/8e39917518b62cce44d098bd6fe5d2c1b41f92bd
+Bug: https://github.com/alsa-project/alsa-ucm-conf/pull/370
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2069760
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/sof-soundwire/cs35l56.conf | 40 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+ create mode 100644 ucm2/sof-soundwire/cs35l56.conf
+
+--- /dev/null
++++ b/ucm2/sof-soundwire/cs35l56.conf
+@@ -0,0 +1,40 @@
++# Use case Configuration for sof-soundwire card
++
++#
++# Arguments:
++#   ForAmps - regex filter for var:SpeakerAmps
++#   Amp - amplifier number 1-8
++#
++DefineMacro.cs42l43spk.If.0 {
++	Condition {
++		Type RegexMatch
++		Regex "${var:__ForAmps}"
++		String "${var:SpeakerAmps}"
++	}
++	True {
++		EnableSequence [
++			cset "name='AMP${var:__Amp} Speaker Switch' 1"
++		]
++		DisableSequence [
++			cset "name='AMP${var:__Amp} Speaker Switch' 0"
++		]
++	}
++}
++
++SectionDevice."Speaker" {
++	Comment "Speaker"
++
++	Macro.num1.cs42l43spk { ForAmps "[1-8]" Amp 1 }
++	Macro.num2.cs42l43spk { ForAmps "[2-8]" Amp 2 }
++	Macro.num3.cs42l43spk { ForAmps "[3-8]" Amp 3 }
++	Macro.num4.cs42l43spk { ForAmps "[4-8]" Amp 4 }
++	Macro.num5.cs42l43spk { ForAmps "[5-8]" Amp 5 }
++	Macro.num6.cs42l43spk { ForAmps "[6-8]" Amp 6 }
++	Macro.num7.cs42l43spk { ForAmps "[78]" Amp 7 }
++	Macro.num8.cs42l43spk { ForAmps "8" Amp 8 }
++
++	Value {
++		PlaybackPriority 100
++		PlaybackPCM "hw:${CardId},2"
++	}
++}

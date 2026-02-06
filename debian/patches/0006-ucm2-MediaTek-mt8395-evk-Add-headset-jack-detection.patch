@@ -1,0 +1,38 @@
+From 7c1243017be4b9eafd400a6fd078d276c7462f14 Mon Sep 17 00:00:00 2001
+From: Zoran Zhan <zoran zhan@mediatek.com>
+Date: Fri, 2 Aug 2024 15:08:49 +0800
+Subject: [PATCH 6/9] ucm2: MediaTek: mt8395-evk: Add headset jack detection
+
+Add headphone and headset microphone jack detection support on
+mt8395-evk.
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/456
+Signed-off-by: Zoran Zhan <zoran.zhan@mediatek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+---
+ ucm2/MediaTek/mt8395-evk/HiFi.conf | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/ucm2/MediaTek/mt8395-evk/HiFi.conf b/ucm2/MediaTek/mt8395-evk/HiFi.conf
+index b9a8a42..8c325fd 100644
+--- a/ucm2/MediaTek/mt8395-evk/HiFi.conf
++++ b/ucm2/MediaTek/mt8395-evk/HiFi.conf
+@@ -100,6 +100,7 @@ SectionDevice."Headphones" {
+ 		PlaybackPriority 400
+ 		PlaybackChannels 2
+ 		PlaybackPCM "hw:${CardId},0"
++		JackControl "Headphone Jack"
+ 	}
+ }
+ 
+@@ -118,6 +119,7 @@ SectionDevice."Headset" {
+ 		CapturePriority 500
+ 		CaptureChannels 3
+ 		CapturePCM "hw:${CardId},15"
++		JackControl "Headset Mic Jack"
+ 	}
+ }
+ 
+-- 
+2.43.0
+

@@ -1,0 +1,47 @@
+From: Jaroslav Kysela <perex@perex.cz>
+Date: Mon, 10 Jun 2024 08:47:23 +0200
+Subject: [PATCH] sof-soundwire: fix missing MultiCodec1 initialization and
+ Empty condition
+
+Fixes: ab2b4f1 ("ucm2: soundwire: add rt722 SDCA device")
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/4aa9822afaae2138f342c35c04127d28331274e0.patch
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2086250
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/sof-soundwire/sof-soundwire.conf | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+--- a/ucm2/sof-soundwire/sof-soundwire.conf
++++ b/ucm2/sof-soundwire/sof-soundwire.conf
+@@ -15,6 +15,7 @@
+ 	HeadsetCodec1 ""
+ 	MicCodec1 ""
+ 	Mics1 "0"
++	MultiCodec1 ""
+ }
+ 
+ DefineRegex {
+@@ -42,17 +43,16 @@
+ 		Regex " cfg-mics:([1-9][0-9]*)"
+ 		String "${CardComponents}"
+ 	}
+-}
+-
+-DefineRegex.MultiCodec {
+-	Regex "(rt722(-sdca)?)"
+-	String "${var:SpeakerCodec1} ${var:HeadsetCodec1} ${var:MicCodec1}"
++	MultiCodec {
++		Regex "(rt722(-sdca)?)"
++		String "${var:SpeakerCodec1} ${var:HeadsetCodec1} ${var:MicCodec1}"
++	}
+ }
+ 
+ If.multi_init {
+ 	Condition {
+ 		Type String
+-		Empty "${var:MultiCodec1} "
++		Empty "${var:MultiCodec1}"
+ 	}
+ 	False {
+ 		Define {

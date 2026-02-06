@@ -1,0 +1,219 @@
+From 0915b27aac2c8429c2b549761778fef3873092f4 Mon Sep 17 00:00:00 2001
+From: Jaroslav Kysela <perex@perex.cz>
+Date: Tue, 11 Mar 2025 11:23:08 +0100
+Subject: [PATCH] ucm2: use new SetLED macro to hide the implementation details
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/517
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/0915b27aac2c8429c2b549761778fef3873092f4
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2106394
+Signed-off-by: Atlas Yu <atlas.yu@canonical.com>
+---
+ ucm2/HDA/HDA.conf                             | 11 ++++++-----
+ ucm2/Intel/bytcr-rt5640/bytcr-rt5640.conf     | 10 +++++-----
+ ucm2/Intel/cht-bsw-rt5672/cht-bsw-rt5672.conf | 11 ++++++-----
+ ucm2/Intel/sof-hda-dsp/sof-hda-dsp.conf       | 19 ++++++++-----------
+ ucm2/codecs/cs42l43-dmic/init.conf            |  7 +++----
+ ucm2/codecs/cs42l43/init.conf                 |  5 +----
+ ucm2/codecs/rt715-sdca/init.conf              |  5 +----
+ ucm2/codecs/rt715/init.conf                   |  5 +----
+ ucm2/codecs/rt722/init.conf                   |  5 +----
+ ucm2/sof-soundwire/sof-soundwire.conf         |  5 ++---
+ 10 files changed, 34 insertions(+), 49 deletions(-)
+
+--- a/ucm2/HDA/HDA.conf
++++ b/ucm2/HDA/HDA.conf
+@@ -1,5 +1,7 @@
+ Syntax 6
+ 
++Include.led.File "/common/ctl/led.conf"
++
+ Define.Use ""	# a non-empty string to use UCM configuration for HDA devices
+ Define.Done ""	# a non-empty string to skip the end error
+ 
+@@ -51,11 +53,10 @@
+ 			True {
+ 				Include.init.File "/HDA/init.conf"
+ 
+-				FixedBootSequence [
+-					cset-new "name='Mic ACP LED Capture Switch' type=bool,count=1 off"
+-					exec "-/sbin/modprobe snd_ctl_led"
+-					sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:Mic ACP LED Capture Switch"
+-					sysw "-/class/sound/ctl-led/mic/card${CardNumber}/detach:Capture Switch"
++				Macro [
++					{ CtlNew { Arg="name='Mic ACP LED Capture Switch' type=bool,count=1 off" } }
++					{ SetLED { LED="mic" Action="attach" CtlId="Mic ACP LED Capture Switch" } }
++					{ SetLED { LED="mic" Action="detach" CtlId="Capture Switch" } }
+ 				]
+ 			}
+ 		}
+--- a/ucm2/Intel/bytcr-rt5640/bytcr-rt5640.conf
++++ b/ucm2/Intel/bytcr-rt5640/bytcr-rt5640.conf
+@@ -1,16 +1,16 @@
+-Syntax 4
++Syntax 6
+ 
+ SectionUseCase."HiFi" {
+ 	File "/Intel/bytcr-rt5640/HiFi.conf"
+ 	Comment "Play HiFi quality Music"
+ }
+ 
++Include.led.File "/common/ctl/led.conf"
+ Include.card-init.File "/lib/card-init.conf"
+ Include.ctl-remap.File "/lib/ctl-remap.conf"
+ Include.codec-init.File "/codecs/rt5640/init.conf"
+ 
+-FixedBootSequence [
+-	exec "-/sbin/modprobe snd_ctl_led"
+-	sysw "-/class/sound/ctl-led/speaker/card${CardNumber}/attach:Speaker Channel Switch"
+-	sysw "-/class/sound/ctl-led/speaker/card${CardNumber}/attach:HP Channel Switch"
++Macro [
++	{ SetLED { LED="speaker" Action="attach" CtlId="Speaker Channel Switch" } }
++	{ SetLED { LED="speaker" Action="attach" CtlId="HP Channel Switch" } }
+ ]
+--- a/ucm2/Intel/cht-bsw-rt5672/cht-bsw-rt5672.conf
++++ b/ucm2/Intel/cht-bsw-rt5672/cht-bsw-rt5672.conf
+@@ -1,14 +1,15 @@
+ # Adapted from https://github.com/plbossart/UCM/tree/master/cht-bsw-rt5672
+ 
+-Syntax 3
++Syntax 6
+ 
+ SectionUseCase."HiFi" {
+ 	File "/Intel/cht-bsw-rt5672/HiFi.conf"
+ 	Comment "Play HiFi quality Music"
+ }
+ 
+-FixedBootSequence [
+-	exec "-/sbin/modprobe snd_ctl_led"
+-	sysw "-/class/sound/ctl-led/speaker/card${CardNumber}/attach:DAC1 Playback Switch"
+-	sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:ADC Capture Switch"
++Include.led.File "/common/ctl/led.conf"
++
++Macro [
++	{ SetLED { LED="speaker" Action="attach" CtlId="DAC1 Playback Switch" } }
++	{ SetLED { LED="mic" Action="attach" CtlId="ADC Capture Switch" } }
+ ]
+--- a/ucm2/Intel/sof-hda-dsp/sof-hda-dsp.conf
++++ b/ucm2/Intel/sof-hda-dsp/sof-hda-dsp.conf
+@@ -3,6 +3,7 @@
+ Define.DeviceMic "Mic"
+ Define.DeviceDmic ""
+ 
++Include.led.File "/common/ctl/led.conf"
+ Include.card-init.File "/lib/card-init.conf"
+ 
+ If.devdmic {
+@@ -14,13 +15,13 @@
+ 	True {
+ 		Define.DeviceDmic "Mic1"
+ 		Define.DeviceMic "Mic2"
++		#
++		# users expect to turn the LED on when only internal
++		# mic is off, but it makes sense to turn this LED
++		# when all internal inputs are off
++		#
++		Macro [{ SetLED { LED="mic" Action="detach" CtlId="Capture Switch" } }]
+ 		FixedBootSequence [
+-			#
+-			# users expect to turn the LED on when only internal
+-			# mic is off, but it makes sense to turn this LED
+-			# when all internal inputs are off
+-			#
+-			sysw "-/class/sound/ctl-led/mic/card${CardNumber}/detach:Capture Switch"
+ 			# dmic array info
+ 			exec "-nhlt-dmic-info -o ${var:LibDir}/dmics-nhlt.json"
+ 		]
+@@ -71,11 +72,7 @@
+ 		Haystack "$${sys:class/leds/platform::mute/device}"
+ 		Needle "dell-laptop"
+ 	}
+-	True {
+-		FixedBootSequence [
+-			sysw "-/class/sound/ctl-led/speaker/card${CardNumber}/attach:Master Playback Switch"
+-		]
+-	}
++	True.Macro [{ SetLED { LED="speaker" Action="detach" CtlId="Master Playback Switch" } }]
+ }
+ 
+ If.headphone {
+--- a/ucm2/codecs/cs42l43-dmic/init.conf
++++ b/ucm2/codecs/cs42l43-dmic/init.conf
+@@ -18,8 +18,7 @@
+ 	cset "name='cs42l43 Decimator 4 Switch' 0"
+ ]
+ 
+-FixedBootSequence [
+-	exec "-/sbin/modprobe snd_ctl_led"
+-	sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:cs42l43 Decimator 3 Switch"
+-	sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:cs42l43 Decimator 4 Switch"
++Macro [
++	{ SetLED { LED="mic" Action="attach" CtlId="cs42l43 Decimator 3 Switch" } }
++	{ SetLED { LED="mic" Action="attach" CtlId="cs42l43 Decimator 4 Switch" } }
+ ]
+--- a/ucm2/codecs/cs42l43/init.conf
++++ b/ucm2/codecs/cs42l43/init.conf
+@@ -15,7 +15,4 @@
+ 	cset "name='cs42l43 Decimator 1 Switch' 0"
+ ]
+ 
+-FixedBootSequence [
+-	exec "-/sbin/modprobe snd_ctl_led"
+-	sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:cs42l43 Decimator 1 Switch"
+-]
++Macro [{ SetLED { LED="mic" Action="attach" CtlId="cs42l43 Decimator 1 Switch" } }]
+--- a/ucm2/codecs/rt715-sdca/init.conf
++++ b/ucm2/codecs/rt715-sdca/init.conf
+@@ -8,7 +8,4 @@
+ 	cset "name='rt714 FU02 Capture Volume' 47"
+ ]
+ 
+-FixedBootSequence [
+-	exec "-/sbin/modprobe snd_ctl_led"
+-	sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:rt714 FU02 Capture Switch"
+-]
++Macro [{ SetLED { LED="mic" Action="attach" CtlId="rt714 FU02 Capture Switch" } }]
+--- a/ucm2/codecs/rt715/init.conf
++++ b/ucm2/codecs/rt715/init.conf
+@@ -24,8 +24,5 @@
+ 		Type ControlExists
+ 		Control "name='rt715 Capture Switch'"
+ 	}
+-	True.FixedBootSequence [
+-		exec "-/sbin/modprobe snd_ctl_led"
+-		sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:rt715 Capture Switch"
+-	]
++	Macro [{ SetLED { LED="mic" Action="attach" CtlId="rt715 Capture Switch" } }]
+ }
+--- a/ucm2/codecs/rt722/init.conf
++++ b/ucm2/codecs/rt722/init.conf
+@@ -10,7 +10,4 @@
+ 	cset "name='rt722 FU0F Capture Volume' 63"
+ ]
+ 
+-FixedBootSequence [
+-	exec "-/sbin/modprobe snd_ctl_led"
+-	sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:rt722 FU1E Capture Switch"
+-]
++Macro [{ SetLED { LED="mic" Action="attach" CtlId="rt722 FU1E Capture Switch" } }]
+--- a/ucm2/sof-soundwire/sof-soundwire.conf
++++ b/ucm2/sof-soundwire/sof-soundwire.conf
+@@ -5,6 +5,7 @@
+ 	Comment "Play HiFi quality Music"
+ }
+ 
++Include.led.File "/common/ctl/led.conf"
+ Include.card-init.File "/lib/card-init.conf"
+ Include.ctl-remap.File "/lib/ctl-remap.conf"
+ 
+@@ -129,9 +130,7 @@
+ 		Needle "rt715"
+ 		Haystack "${var:MicCodec1}"
+ 	}
+-	True.BootSequence [
+-		sysw "-/class/sound/ctl-led/mic/card${CardNumber}/detach:PGA5.0 5 Master Capture Switch"
+-	]
++	True.Macro [{ SetLED { LED="mic" Action="detach" CtlId="PGA5.0 5 Master Capture Switch" } }]
+ }
+ 
+ If.pga_init_pga2 {

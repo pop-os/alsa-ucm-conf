@@ -1,0 +1,23 @@
+From: Jaroslav Kysela <perex@perex.cz>
+Date: Mon, 11 Mar 2024 11:06:15 +0100
+Subject: sof-soundwire: fix rt1318 config typo in rt1318spk macro
+
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/7e22b7c214d346bd156131f3e6c6a5900bbf116d
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2069760
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/sof-soundwire/rt1318.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/ucm2/sof-soundwire/rt1318.conf
++++ b/ucm2/sof-soundwire/rt1318.conf
+@@ -9,7 +9,7 @@
+ DefineMacro.rt1318spk.If.0 {
+ 	Condition {
+ 		Type RegexMatch
+-		Regex "${var:__RegEx}"
++		Regex "${var:__ForAmps}"
+ 		String "${var:SpeakerAmps}"
+ 	}
+ 	True {

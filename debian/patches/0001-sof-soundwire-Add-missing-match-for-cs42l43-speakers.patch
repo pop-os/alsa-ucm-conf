@@ -1,0 +1,28 @@
+From: Charles Keepax <ckeepax@opensource.cirrus.com>
+Date: Mon, 8 Jul 2024 12:59:18 +0100
+Subject: sof-soundwire: Add missing match for cs42l43 speakers
+
+The cs42l43 reports as cs42l43-spk in the speaker case, the regex in
+sof-soundwire needs updated to recognise that.
+
+Fixes: 035d9206cffd ("sof-soundwire: Add basic support for cs42l43's speaker")
+Signed-off-by: Charles Keepax <ckeepax@opensource.cirrus.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commits/d8aea84bebaae416c530a2d448f5e3758809c09f
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2069760
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/sof-soundwire/sof-soundwire.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/ucm2/sof-soundwire/sof-soundwire.conf
++++ b/ucm2/sof-soundwire/sof-soundwire.conf
+@@ -19,7 +19,7 @@
+ 
+ DefineRegex {
+ 	SpeakerCodec {
+-		Regex " spk:([a-z0-9]+(-sdca)?)"
++		Regex " spk:([a-z0-9]+((-sdca)|(-spk))?)"
+ 		String "${CardComponents}"
+ 	}
+ 	SpeakerChannels {

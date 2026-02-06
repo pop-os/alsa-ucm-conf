@@ -1,0 +1,89 @@
+From e4791900954c3951d15038822a55a3031aac49d2 Mon Sep 17 00:00:00 2001
+From: Shuming Fan <shumingf@realtek.com>
+Date: Fri, 6 Jun 2025 12:47:08 +0800
+Subject: [PATCH] ucm2: sof-soundwire: add rt712-vb device
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/573
+Signed-off-by: Shuming Fan <shumingf@realtek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: backport, https://github.com/alsa-project/alsa-ucm-conf/commit/e4791900954c3951d15038822a55a3031aac49d2
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2129952
+---
+ ucm2/codecs/rt712/init.conf   | 34 ++++++++++++++++++++++++++++------
+ ucm2/sof-soundwire/rt712.conf | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 57 insertions(+), 6 deletions(-)
+
+--- a/ucm2/codecs/rt712/init.conf
++++ b/ucm2/codecs/rt712/init.conf
+@@ -1,8 +1,30 @@
+ # RT712 specific volume control settings
+ 
+-BootSequence [
+-	cset "name='rt712 FU05 Playback Volume' 87"
+-	cset "name='rt712 ADC 23 Mux' 'MIC2'"
+-	cset "name='rt712 FU0F Capture Volume' 57"
+-	cset "name='rt712 FU0F Capture Switch' 1"
+-]
++If.rt712_init {
++	Condition {
++		Type RegexMatch
++		Regex "(rt712(-sdca)?)"
++		String "${var:MultiMicShadow}"
++	}
++	True {
++		# RT712-VB integrated with DMIC
++		BootSequence [
++			cset "name='rt712 FU05 Playback Volume' 87"
++			cset "name='rt712 ADC 23 Mux' 'MIC2'"
++			cset "name='rt712 FU0F Capture Volume' 57"
++			cset "name='rt712 FU0F Capture Switch' 1"
++			cset "name='rt712 FU1E Capture Switch' 1"
++			cset "name='rt712 FU1E Capture Volume' 47"
++			cset "name='rt712 ADC 0A Mux' 'DMIC1'"
++			cset "name='rt712 ADC 0B Mux' 'DMIC2'"
++		]
++	}
++	False {
++		BootSequence [
++			cset "name='rt712 FU05 Playback Volume' 87"
++			cset "name='rt712 ADC 23 Mux' 'MIC2'"
++			cset "name='rt712 FU0F Capture Volume' 57"
++			cset "name='rt712 FU0F Capture Switch' 1"
++		]
++	}
++}
+--- a/ucm2/sof-soundwire/rt712.conf
++++ b/ucm2/sof-soundwire/rt712.conf
+@@ -85,3 +85,32 @@
+ 		JackControl "Headset Mic Jack"
+ 	}
+ }
++
++If.codecmic {
++	Condition {
++		Type RegexMatch
++		Regex "(rt712(-sdca)?)"
++		String "${var:MultiMicShadow}"
++	}
++	True {
++		SectionDevice."Mic" {
++			Comment "SoundWire Microphones"
++
++			EnableSequence [
++				cset "name='rt712 FU1E Capture Switch' 1"
++			]
++
++			DisableSequence [
++				cset "name='rt712 FU1E Capture Switch' 0"
++			]
++
++			Value {
++				CapturePriority 100
++				CapturePCM "hw:${CardId},4"
++				CaptureSwitch "rt712 FU1E Capture Switch"
++				CaptureVolume "rt712 FU1E Capture Volume"
++				CaptureMixerElem "rt712 FU1E"
++			}
++		}
++	}
++}

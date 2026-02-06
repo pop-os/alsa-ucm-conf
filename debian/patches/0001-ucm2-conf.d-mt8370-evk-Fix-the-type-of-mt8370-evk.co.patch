@@ -1,0 +1,70 @@
+From d864e945ce4171fcaf6249bebec4f683fef0f5cf Mon Sep 17 00:00:00 2001
+From: Zoran Zhan <zoran.zhan@mediatek.com>
+Date: Mon, 22 Jan 2024 11:49:08 +0800
+Subject: [PATCH] ucm2: conf.d: mt8370-evk: Fix the type of mt8370-evk.conf
+
+Fix the type of mt8370-evk.conf at /ucm2/conf.d, to let the
+symbolic link can correctly point to the conf.
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/386
+Signed-off-by: Zoran Zhan <zoran.zhan@mediatek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/d864e945ce4171fcaf6249bebec4f683fef0f5cf
+Bug: https://bugs.launchpad.net/ubuntu/+source/alsa-ucm-conf/+bug/2051199
+---
+ ucm2/conf.d/mt8370-evk/mt8370-evk.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+ mode change 100644 => 120000 ucm2/conf.d/mt8370-evk/mt8370-evk.conf
+
+Index: alsa-ucm-conf-1.2.10/ucm2/conf.d/mt8370-evk/mt8370-evk.conf
+===================================================================
+--- alsa-ucm-conf-1.2.10.orig/ucm2/conf.d/mt8370-evk/mt8370-evk.conf	2025-05-21 00:09:18.000000000 +0200
++++ alsa-ucm-conf-1.2.10/ucm2/conf.d/mt8370-evk/mt8370-evk.conf	2025-05-21 00:09:18.000000000 +0200
+@@ -1 +1,45 @@
+-../../MediaTek/mt8370-evk/mt8370-evk.conf
++Syntax 4
++
++SectionUseCase."HiFi" {
++	File "/MediaTek/mt8370-evk/HiFi.conf"
++	Comment "Play high quality music"
++}
++
++BootSequence [
++	cset "name='HP Mux' Audio Playback"
++	cset "name='LOL Mux' Open"
++	cset "name='MISO0_MUX' UL1_CH1"
++	cset "name='MISO1_MUX' UL1_CH1"
++	cset "name='ADC_L_Mux' Left Preamplifier"
++	cset "name='PGA_L_Mux' AIN1"
++	cset "name='HDMI_OUT_MUX' Connect"
++	cset "name='DPTX_OUT_MUX' Disconnect"
++	cset "name='ETDM_OUT1_Clock_Source' a1sys_a2sys"
++	cset "name='ETDM_OUT2_Clock_Source' a1sys_a2sys"
++	cset "name='ETDM_OUT3_Clock_Source' a1sys_a2sys"
++	cset "name='ETDM_IN1_Clock_Source' a1sys_a2sys"
++	cset "name='ETDM_IN2_Clock_Source' a1sys_a2sys"
++	cset "name='Lineout Volume' 10"
++	cset "name='Headset Volume' 2"
++	cset "name='PGA1 Volume' 4"
++	cset "name='O000 I000 Switch' on"
++	cset "name='O001 I001 Switch' on"
++	cset "name='O002 I004 Switch' on"
++	cset "name='O003 I006 Switch' on"
++	cset "name='O034 I168 Switch' on"
++	cset "name='O035 I169 Switch' on"
++	cset "name='O036 I012 Switch' on"
++	cset "name='O037 I013 Switch' on"
++	cset "name='O040 I002 Switch' on"
++	cset "name='O041 I003 Switch' on"
++	cset "name='O048 I022 Switch' on"
++	cset "name='O049 I023 Switch' on"
++	cset "name='O050 I024 Switch' on"
++	cset "name='O051 I025 Switch' on"
++	cset "name='O052 I026 Switch' on"
++	cset "name='O053 I027 Switch' on"
++	cset "name='O054 I028 Switch' on"
++	cset "name='O055 I029 Switch' on"
++	cset "name='O176 I070 Switch' on"
++	cset "name='O177 I071 Switch' on"
++]
+\ No newline at end of file

@@ -1,0 +1,415 @@
+From: Jaroslav Kysela <perex@perex.cz>
+Date: Wed, 6 Dec 2023 15:53:38 +0100
+Subject: [PATCH 1/3] sof-soundwire: Use one file for speaker codec
+ initialization
+
+Use macros to minimize configuration blocks.
+
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/c0a4df6037860b4e1dffb497e5a28258a351a0f8
+Bug: https://github.com/alsa-project/alsa-ucm-conf/pull/370
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2069760
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/sof-soundwire/HiFi.conf     |  2 +-
+ ucm2/sof-soundwire/rt1308-1.conf | 22 --------------
+ ucm2/sof-soundwire/rt1308-2.conf | 29 ------------------
+ ucm2/sof-soundwire/rt1308.conf   | 46 ++++++++++++++++++++++++++++
+ ucm2/sof-soundwire/rt1316-1.conf | 41 -------------------------
+ ucm2/sof-soundwire/rt1316-2.conf | 51 -------------------------------
+ ucm2/sof-soundwire/rt1316.conf   | 65 ++++++++++++++++++++++++++++++++++++++++
+ ucm2/sof-soundwire/rt1318-1.conf | 20 -------------
+ ucm2/sof-soundwire/rt1318-2.conf | 25 ----------------
+ ucm2/sof-soundwire/rt1318.conf   | 44 +++++++++++++++++++++++++++
+ 10 files changed, 156 insertions(+), 189 deletions(-)
+ delete mode 100644 ucm2/sof-soundwire/rt1308-1.conf
+ delete mode 100644 ucm2/sof-soundwire/rt1308-2.conf
+ create mode 100644 ucm2/sof-soundwire/rt1308.conf
+ delete mode 100644 ucm2/sof-soundwire/rt1316-1.conf
+ delete mode 100644 ucm2/sof-soundwire/rt1316-2.conf
+ create mode 100644 ucm2/sof-soundwire/rt1316.conf
+ delete mode 100644 ucm2/sof-soundwire/rt1318-1.conf
+ delete mode 100644 ucm2/sof-soundwire/rt1318-2.conf
+ create mode 100644 ucm2/sof-soundwire/rt1318.conf
+
+--- a/ucm2/sof-soundwire/HiFi.conf
++++ b/ucm2/sof-soundwire/HiFi.conf
+@@ -13,7 +13,7 @@
+ 		Type String
+ 		Empty "${var:SpeakerCodec1}"
+ 	}
+-	False.Include.spkdev.File "/sof-soundwire/${var:SpeakerCodec1}-${var:SpeakerAmps1}.conf"
++	False.Include.spkdev.File "/sof-soundwire/${var:SpeakerCodec1}.conf"
+ }
+ 
+ If.micdev {
+--- a/ucm2/sof-soundwire/rt1308-1.conf
++++ /dev/null
+@@ -1,22 +0,0 @@
+-# Use case Configuration for sof-soundwire card
+-
+-SectionDevice."Speaker" {
+-	Comment	"Speaker"
+-
+-	EnableSequence [
+-		cset "name='rt1308-1 DAC L Switch' 1"
+-		cset "name='rt1308-1 DAC R Switch' 1"
+-		cset "name='Speaker Switch' on"
+-	]
+-
+-	DisableSequence [
+-		cset "name='rt1308-1 DAC L Switch' 0"
+-		cset "name='rt1308-1 DAC R Switch' 0"
+-		cset "name='Speaker Switch' off"
+-	]
+-
+-	Value {
+-	      PlaybackPriority 100
+-	      PlaybackPCM "hw:${CardId},2"
+-	}
+-}
+--- a/ucm2/sof-soundwire/rt1308-2.conf
++++ /dev/null
+@@ -1,29 +0,0 @@
+-# Use case Configuration for sof-soundwire card
+-
+-SectionDevice."Speaker" {
+-	Comment	"Speaker"
+-
+-	EnableSequence [
+-		cset "name='rt1308-1 RX Channel Select' LL"
+-		cset "name='rt1308-2 RX Channel Select' RR"
+-
+-		cset "name='rt1308-1 DAC L Switch' 1"
+-		cset "name='rt1308-1 DAC R Switch' 1"
+-		cset "name='rt1308-2 DAC L Switch' 1"
+-		cset "name='rt1308-2 DAC R Switch' 1"
+-		cset "name='Speaker Switch' on"
+-	]
+-
+-	DisableSequence [
+-		cset "name='rt1308-1 DAC L Switch' 0"
+-		cset "name='rt1308-1 DAC R Switch' 0"
+-		cset "name='rt1308-2 DAC L Switch' 0"
+-		cset "name='rt1308-2 DAC R Switch' 0"
+-		cset "name='Speaker Switch' off"
+-	]
+-
+-	Value {
+-	      PlaybackPriority 100
+-	      PlaybackPCM "hw:${CardId},2"
+-	}
+-}
+--- /dev/null
++++ b/ucm2/sof-soundwire/rt1308.conf
+@@ -0,0 +1,46 @@
++# Use case Configuration for sof-soundwire card
++
++#
++# Arguments:
++#   ForAmps - regex filter for var:SpeakerAmps
++#   Amp - amplifier number (1,2 etc.)
++#   Sel - channel selection (LR LL RL RR)
++#
++DefineMacro.rt1308spk.If.0 {
++	Condition {
++		Type RegexMatch
++		Regex "${var:__ForAmps}"
++		String "${var:SpeakerAmps}"
++	}
++	True {
++		EnableSequence [
++			cset "name='rt1308-${var:__Amp} RX Channel Select' ${var:__Sel}"
++			cset "name='rt1308-${var:__Amp} DAC L Switch' 1"
++			cset "name='rt1308-${var:__Amp} DAC R Switch' 1"
++		]
++		DisableSequence [
++			cset "name='rt1308-${var:__Amp} DAC L Switch' 0"
++			cset "name='rt1308-${var:__Amp} DAC R Switch' 0"
++		]
++	}
++}
++
++SectionDevice."Speaker" {
++	Comment	"Speaker"
++
++	Macro.num1.rt1308spk { ForAmps "[12]" Amp 1 Sel LL }
++	Macro.num2.rt1308spk { ForAmps "2" Amp 2 Sel RR }
++
++	EnableSequence [
++		cset "name='Speaker Switch' on"
++	]
++
++	DisableSequence [
++		cset "name='Speaker Switch' off"
++	]
++
++	Value {
++	      PlaybackPriority 100
++	      PlaybackPCM "hw:${CardId},2"
++	}
++}
+--- a/ucm2/sof-soundwire/rt1316-1.conf
++++ /dev/null
+@@ -1,41 +0,0 @@
+-# Use case Configuration for sof-soundwire card
+-
+-SectionDevice."Speaker" {
+-	Comment	"Speaker"
+-
+-	If.lrswitch {
+-		Condition {
+-			Type ControlExists
+-			Control "name='rt1316-1 DAC L Switch'"
+-		}
+-		True {
+-			EnableSequence [
+-				cset "name='rt1316-1 DAC L Switch' 1"
+-				cset "name='rt1316-1 DAC R Switch' 1"
+-				cset "name='Speaker Switch' on"
+-			]
+-
+-			DisableSequence [
+-				cset "name='rt1316-1 DAC L Switch' 0"
+-				cset "name='rt1316-1 DAC R Switch' 0"
+-				cset "name='Speaker Switch' off"
+-			]
+-		}
+-		False {
+-			EnableSequence [
+-				cset "name='rt1316-1 DAC Switch' 1"
+-				cset "name='Speaker Switch' on"
+-			]
+-
+-			DisableSequence [
+-				cset "name='rt1316-1 DAC Switch' 0"
+-				cset "name='Speaker Switch' off"
+-			]
+-		}
+-	}
+-
+-	Value {
+-	      PlaybackPriority 100
+-	      PlaybackPCM "hw:${CardId},2"
+-	}
+-}
+--- a/ucm2/sof-soundwire/rt1316-2.conf
++++ /dev/null
+@@ -1,51 +0,0 @@
+-# Use case Configuration for sof-soundwire card
+-
+-SectionDevice."Speaker" {
+-	Comment	"Speaker"
+-
+-	If.lrswitch {
+-		Condition {
+-			Type ControlExists
+-			Control "name='rt1316-1 DAC L Switch'"
+-		}
+-		True {
+-			EnableSequence [
+-				cset "name='rt1316-1 RX Channel Select' L,L"
+-				cset "name='rt1316-2 RX Channel Select' R,R"
+-				cset "name='rt1316-1 DAC L Switch' 1"
+-				cset "name='rt1316-1 DAC R Switch' 1"
+-				cset "name='rt1316-2 DAC L Switch' 1"
+-				cset "name='rt1316-2 DAC R Switch' 1"
+-				cset "name='Speaker Switch' on"
+-			]
+-
+-			DisableSequence [
+-				cset "name='rt1316-1 DAC L Switch' 0"
+-				cset "name='rt1316-1 DAC R Switch' 0"
+-				cset "name='rt1316-2 DAC L Switch' 0"
+-				cset "name='rt1316-2 DAC R Switch' 0"
+-				cset "name='Speaker Switch' off"
+-			]
+-		}
+-		False {
+-			EnableSequence [
+-				cset "name='rt1316-1 RX Channel Select' L,L"
+-				cset "name='rt1316-2 RX Channel Select' R,R"
+-				cset "name='rt1316-1 DAC Switch' 1"
+-				cset "name='rt1316-2 DAC Switch' 1"
+-				cset "name='Speaker Switch' on"
+-			]
+-
+-			DisableSequence [
+-				cset "name='rt1316-1 DAC Switch' 0"
+-				cset "name='rt1316-2 DAC Switch' 0"
+-				cset "name='Speaker Switch' off"
+-			]
+-		}
+-	}
+-
+-	Value {
+-	      PlaybackPriority 100
+-	      PlaybackPCM "hw:${CardId},2"
+-	}
+-}
+--- /dev/null
++++ b/ucm2/sof-soundwire/rt1316.conf
+@@ -0,0 +1,65 @@
++# Use case Configuration for sof-soundwire card
++
++#
++# Arguments:
++#   ForAmps - regex filter for var:SpeakerAmps
++#   Amp - amplifier number (1,2 etc.)
++#   Sel - channel selection (L,R L,L L,R L,L+R R,L R,R R,L+R L+R,L L+R,R L+R,L+R)
++#
++DefineMacro.rt1316spk.If.0 {
++	Condition {
++		Type RegexMatch
++		Regex "${var:__ForAmps}"
++		String "${var:SpeakerAmps}"
++	}
++	True {
++		EnableSequence [
++			cset "name='rt1316-${var:__Amp} RX Channel Select' ${var:__Sel}"
++		]
++		If.lrswitch {
++			Condition {
++				Type ControlExists
++				Control "name='rt1316-${var:__Amp} DAC L Switch'"
++			}
++			True {
++				EnableSequence [
++					cset "name='rt1316-${var:__Amp} DAC L Switch' 1"
++					cset "name='rt1316-${var:__Amp} DAC R Switch' 1"
++				]
++				DisableSequence [
++					cset "name='rt1316-${var:__Amp} DAC L Switch' 0"
++					cset "name='rt1316-${var:__Amp} DAC R Switch' 0"
++				]
++			}
++			False {
++				EnableSequence [
++					cset "name='rt1316-${var:__Amp} DAC Switch' 1"
++				]
++
++				DisableSequence [
++					cset "name='rt1316-${var:__Amp} DAC Switch' 0"
++				]
++			}
++		}
++	}
++}
++
++SectionDevice."Speaker" {
++	Comment	"Speaker"
++
++	Macro.num1.rt1316spk { ForAmps "[12]" Amp 1 Sel "L,L" }
++	Macro.num2.rt1316spk { ForAmps "2" Amp 2 Sel "R,R" }
++
++	EnableSequence [
++		cset "name='Speaker Switch' on"
++	]
++
++	DisableSequence [
++		cset "name='Speaker Switch' off"
++	]
++
++	Value {
++	      PlaybackPriority 100
++	      PlaybackPCM "hw:${CardId},2"
++	}
++}
+--- a/ucm2/sof-soundwire/rt1318-1.conf
++++ /dev/null
+@@ -1,20 +0,0 @@
+-# Use case Configuration for sof-soundwire card
+-
+-SectionDevice."Speaker" {
+-	Comment	"Speaker"
+-
+-	EnableSequence [
+-		cset "name='rt1318-1 DAC Switch' 1"
+-		cset "name='Speaker Switch' on"
+-	]
+-
+-	DisableSequence [
+-		cset "name='rt1318-1 DAC Switch' 0"
+-		cset "name='Speaker Switch' off"
+-	]
+-
+-	Value {
+-	      PlaybackPriority 100
+-	      PlaybackPCM "hw:${CardId},2"
+-	}
+-}
+--- a/ucm2/sof-soundwire/rt1318-2.conf
++++ /dev/null
+@@ -1,25 +0,0 @@
+-# Use case Configuration for sof-soundwire card
+-
+-SectionDevice."Speaker" {
+-	Comment	"Speaker"
+-
+-	EnableSequence [
+-		cset "name='rt1318-1 RX Channel Select' L,L"
+-		cset "name='rt1318-2 RX Channel Select' R,R"
+-
+-		cset "name='rt1318-1 DAC Switch' 1"
+-		cset "name='rt1318-2 DAC Switch' 1"
+-		cset "name='Speaker Switch' on"
+-	]
+-
+-	DisableSequence [
+-		cset "name='rt1318-1 DAC Switch' 0"
+-		cset "name='rt1318-2 DAC Switch' 0"
+-		cset "name='Speaker Switch' off"
+-	]
+-
+-	Value {
+-	      PlaybackPriority 100
+-	      PlaybackPCM "hw:${CardId},2"
+-	}
+-}
+--- /dev/null
++++ b/ucm2/sof-soundwire/rt1318.conf
+@@ -0,0 +1,44 @@
++# Use case Configuration for sof-soundwire card
++
++#
++# Arguments:
++#   ForAmps - regex filter for var:SpeakerAmps
++#   Amp - amplifier number (1,2 etc.)
++#   Sel - channel selection (L,R L,L L,R L,L+R R,L R,R R,L+R L+R,L L+R,R L+R,L+R)
++#
++DefineMacro.rt1318spk.If.0 {
++	Condition {
++		Type RegexMatch
++		Regex "${var:__RegEx}"
++		String "${var:SpeakerAmps}"
++	}
++	True {
++		EnableSequence [
++			cset "name='rt1308-${var:__Amp} RX Channel Select' ${var:__Sel}"
++			cset "name='rt1308-${var:__Amp} DAC Switch' 1"
++		]
++		DisableSequence [
++			cset "name='rt1308-${var:__Amp} DAC Switch' 0"
++		]
++	}
++}
++
++SectionDevice."Speaker" {
++	Comment	"Speaker"
++
++	Macro.num1.rt1318spk { ForAmps "[12]" Amp 1 Sel "L,L" }
++	Macro.num2.rt1318spk { ForAmps "2" Amp 2 Sel "R,R" }
++
++	EnableSequence [
++		cset "name='Speaker Switch' on"
++	]
++
++	DisableSequence [
++		cset "name='Speaker Switch' off"
++	]
++
++	Value {
++	      PlaybackPriority 100
++	      PlaybackPCM "hw:${CardId},2"
++	}
++}

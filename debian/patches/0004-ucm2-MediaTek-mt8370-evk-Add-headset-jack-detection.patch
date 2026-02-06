@@ -1,0 +1,38 @@
+From 180fba3825a7731ced29690dfd1e1446bb84cbe1 Mon Sep 17 00:00:00 2001
+From: Zoran Zhan <zoran.zhan@mediatek.com>
+Date: Fri, 2 Aug 2024 15:01:41 +0800
+Subject: [PATCH 4/9] ucm2: MediaTek: mt8370-evk: Add headset jack detection
+
+Add headphone and headset microphone jack detection support on
+mt8370-evk.
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/456
+Signed-off-by: Zoran Zhan <zoran.zhan@mediatek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+---
+ ucm2/MediaTek/mt8370-evk/HiFi.conf | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/ucm2/MediaTek/mt8370-evk/HiFi.conf b/ucm2/MediaTek/mt8370-evk/HiFi.conf
+index 65f8304..a94adb0 100644
+--- a/ucm2/MediaTek/mt8370-evk/HiFi.conf
++++ b/ucm2/MediaTek/mt8370-evk/HiFi.conf
+@@ -91,6 +91,7 @@ SectionDevice."Headphones" {
+ 		PlaybackPriority 500
+ 		PlaybackChannels 2
+ 		PlaybackPCM "hw:${CardId},0"
++		JackControl "Headphone Jack"
+ 	}
+ }
+ 
+@@ -109,6 +110,7 @@ SectionDevice."Headset" {
+ 		CapturePriority 500
+ 		CaptureChannels 1
+ 		CapturePCM "hw:${CardId},10"
++		JackControl "Headset Mic Jack"
+ 	}
+ }
+ 
+-- 
+2.43.0
+

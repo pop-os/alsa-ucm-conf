@@ -1,0 +1,49 @@
+From 70f5bff86035d454312c9d01e304a95791668ea5 Mon Sep 17 00:00:00 2001
+From: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+Date: Tue, 19 Nov 2024 11:51:15 +0200
+Subject: [PATCH] sof-soundwire: cs42l43-spk: Correct PlaybackPCM and
+ routing
+
+For speaker the correct PCM device to use is "hw:${CardId},2", the
+"hw:${CardId},0" is for headset playback.
+
+Adjust the routing as well since with :0,2 the DP6RX1/2 needs to be
+selected for the speaker.
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/465
+Signed-off-by: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/70f5bff86035d454312c9d01e304a95791668ea5
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2106394
+Signed-off-by: Atlas Yu <atlas.yu@canonical.com>
+---
+ ucm2/sof-soundwire/cs42l43-spk.conf | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/ucm2/sof-soundwire/cs42l43-spk.conf b/ucm2/sof-soundwire/cs42l43-spk.conf
+index 73f1299..693c450 100644
+--- a/ucm2/sof-soundwire/cs42l43-spk.conf
++++ b/ucm2/sof-soundwire/cs42l43-spk.conf
+@@ -8,8 +8,8 @@ SectionDevice."Speaker" {
+ 	]
+ 
+ 	EnableSequence [
+-		cset "name='cs42l43 Speaker L Input 1' 'DP5RX1'"
+-		cset "name='cs42l43 Speaker R Input 1' 'DP5RX2'"
++		cset "name='cs42l43 Speaker L Input 1' 'DP6RX1'"
++		cset "name='cs42l43 Speaker R Input 1' 'DP6RX2'"
+ 	]
+ 
+ 	DisableSequence [
+@@ -19,7 +19,7 @@ SectionDevice."Speaker" {
+ 
+ 	Value {
+ 		PlaybackPriority 100
+-		PlaybackPCM "hw:${CardId},0"
++		PlaybackPCM "hw:${CardId},2"
+ 		PlaybackMixerElem "cs42l43 Speaker Digital"
+ 	}
+ }
+-- 
+2.47.2
+

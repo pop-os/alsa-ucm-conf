@@ -1,0 +1,22 @@
+From 50ff69ec255ccc94c5bc24c8d63cc5cff7278aaa Mon Sep 17 00:00:00 2001
+From: Shuming Fan <shumingf@realtek.com>
+Date: Thu, 20 Nov 2025 13:29:21 +0800
+Subject: [PATCH] rt713: add mic led support
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/649
+Signed-off-by: Shuming Fan <shumingf@realtek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: backport, https://github.com/alsa-project/alsa-ucm-conf/commit/50ff69ec255ccc94c5bc24c8d63cc5cff7278aaa
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2129952
+---
+ ucm2/codecs/rt713/init.conf | 2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/ucm2/codecs/rt713/init.conf
++++ b/ucm2/codecs/rt713/init.conf
+@@ -21,3 +21,5 @@
+ 		cset "name='rt713 ADC 0B Mux' 'DMIC2'"
+ 	]
+ }
++
++Macro [{ SetLED { LED="mic" Action="attach" CtlId="rt713 FU1E Capture Switch" } }]

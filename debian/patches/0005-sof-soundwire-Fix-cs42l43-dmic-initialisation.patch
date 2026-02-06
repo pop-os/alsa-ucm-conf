@@ -1,0 +1,51 @@
+From 99a80664bcdeb6824294b7adae2a04a0c25400f8 Mon Sep 17 00:00:00 2001
+From: Jaroslav Kysela <perex@perex.cz>
+Date: Tue, 11 Mar 2025 10:49:55 +0100
+Subject: [PATCH 184/237] sof-soundwire: Fix cs42l43 dmic initialisation
+
+Move the mixer controls initialization to BootSequence to let
+manage (store/restore) the sound state at boot.
+
+Fixes: a0d06a6 ("sof-soundwire: Split cs42l43 dmic initialisation")
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/99a80664bcdeb6824294b7adae2a04a0c25400f8
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2106394
+Signed-off-by: Atlas Yu <atlas.yu@canonical.com>
+---
+ ucm2/codecs/cs42l43-dmic/init.conf | 5 ++++-
+ ucm2/codecs/cs42l43/init.conf      | 5 ++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+--- a/ucm2/codecs/cs42l43-dmic/init.conf
++++ b/ucm2/codecs/cs42l43-dmic/init.conf
+@@ -13,9 +13,12 @@
+ 	}
+ }
+ 
+-FixedBootSequence [
++BootSequence [
+ 	cset "name='cs42l43 Decimator 3 Switch' 0"
+ 	cset "name='cs42l43 Decimator 4 Switch' 0"
++]
++
++FixedBootSequence [
+ 	exec "-/sbin/modprobe snd_ctl_led"
+ 	sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:cs42l43 Decimator 3 Switch"
+ 	sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:cs42l43 Decimator 4 Switch"
+--- a/ucm2/codecs/cs42l43/init.conf
++++ b/ucm2/codecs/cs42l43/init.conf
+@@ -11,8 +11,11 @@
+ 	}
+ }
+ 
++BootSequence [
++	cset "name='cs42l43 Decimator 1 Switch' 0"
++]
++
+ FixedBootSequence [
+-        cset "name='cs42l43 Decimator 1 Switch' 0"
+-        exec "-/sbin/modprobe snd_ctl_led"
+-        sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:cs42l43 Decimator 1 Switch"
++	exec "-/sbin/modprobe snd_ctl_led"
++	sysw "-/class/sound/ctl-led/mic/card${CardNumber}/attach:cs42l43 Decimator 1 Switch"
+ ]

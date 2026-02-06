@@ -1,0 +1,110 @@
+From 258a8f1a73605754adef313b47397aa4d9d5dc41 Mon Sep 17 00:00:00 2001
+From: Zoran Zhan <zoran.zhan@mediatek.com>
+Date: Fri, 2 Aug 2024 14:03:04 +0800
+Subject: [PATCH 1/9] ucm2: MediaTek: mt8370-evk: Add dynamic configuration for
+
+If mt8370-evk doesn't load the HDMI/DP dtbo, the 'unknown'
+available status will be shown on the Ubuntu GNOME.
+To solve this issue, add the dynamic configuration to detect
+whether the system is loading HDMI/DP dtbo or not.
+The HDMI/DP device would be configured only if the related
+dtbo has been loaded by the system.
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/456
+Signed-off-by: Zoran Zhan <zoran.zhan@mediatek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+---
+ ucm2/MediaTek/mt8370-evk/HiFi.conf | 76 ++++++++++++++++++------------
+ 1 file changed, 46 insertions(+), 30 deletions(-)
+
+diff --git a/ucm2/MediaTek/mt8370-evk/HiFi.conf b/ucm2/MediaTek/mt8370-evk/HiFi.conf
+index 42a4582..65f8304 100644
+--- a/ucm2/MediaTek/mt8370-evk/HiFi.conf
++++ b/ucm2/MediaTek/mt8370-evk/HiFi.conf
+@@ -1,37 +1,53 @@
+-SectionDevice."HDMI1" {
+-	Comment "HDMI output"
+-
+-	Value {
+-		PlaybackPriority 300
+-		PlaybackPCM "hw:${CardId},5"
+-		JackControl "HDMI Jack"
++If.HDMI {
++	Condition {
++		Type ControlExists
++		Control "iface=CARD,name='HDMI Jack'"
++	}
++	True {
++		SectionDevice."HDMI1" {
++			Comment "HDMI output"
++
++			EnableSequence [
++				cset "name='HDMI_OUT_MUX' 1"
++			]
++
++			DisableSequence [
++				cset "name='HDMI_OUT_MUX' 0"
++			]
++
++			Value {
++				PlaybackPriority 300
++				PlaybackPCM "hw:${CardId},5"
++				JackControl "HDMI Jack"
++			}
++		}
+ 	}
+-
+-	EnableSequence [
+-		cset "name='HDMI_OUT_MUX' 1"
+-	]
+-
+-	DisableSequence [
+-		cset "name='HDMI_OUT_MUX' 0"
+-	]
+ }
+ 
+-SectionDevice."HDMI2" {
+-	Comment "DP output"
+-
+-	Value {
+-		PlaybackPriority 300
+-		PlaybackPCM "hw:${CardId},5"
+-		JackControl "DP Jack"
++If.DP {
++	Condition {
++		Type ControlExists
++		Control "iface=CARD,name='DP Jack'"
++	}
++	True {
++		SectionDevice."HDMI2" {
++			Comment "DP output"
++
++			EnableSequence [
++				cset "name='DPTX_OUT_MUX' 1"
++			]
++
++			DisableSequence [
++				cset "name='DPTX_OUT_MUX' 0"
++			]
++
++			Value {
++				PlaybackPriority 300
++				PlaybackPCM "hw:${CardId},5"
++				JackControl "DP Jack"
++			}
++		}
+ 	}
+-
+-	EnableSequence [
+-		cset "name='DPTX_OUT_MUX' 1"
+-	]
+-
+-	DisableSequence [
+-		cset "name='DPTX_OUT_MUX' 0"
+-	]
+ }
+ 
+ SectionDevice."Speaker" {
+-- 
+2.43.0
+

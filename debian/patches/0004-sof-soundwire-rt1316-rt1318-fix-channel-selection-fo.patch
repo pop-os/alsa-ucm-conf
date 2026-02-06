@@ -1,0 +1,44 @@
+From: Jaroslav Kysela <perex@perex.cz>
+Date: Mon, 11 Mar 2024 13:09:08 +0100
+Subject: sof-soundwire: rt1316/rt1318 - fix channel selection for one amp
+
+Like in commit 9e29f9e27f4e27dce40d8d6803031bb4f7be3c48, use L-R
+channel selection when single amp is present.
+
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commits/73981e94bb69da1be5b1e4a69ff99df28bcfb320
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2069760
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/sof-soundwire/rt1316.conf | 5 +++--
+ ucm2/sof-soundwire/rt1318.conf | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
+
+--- a/ucm2/sof-soundwire/rt1316.conf
++++ b/ucm2/sof-soundwire/rt1316.conf
+@@ -47,8 +47,9 @@
+ SectionDevice."Speaker" {
+ 	Comment	"Speaker"
+ 
+-	Macro.num1.rt1316spk { ForAmps "[12]" Amp 1 Sel "L,L" }
+-	Macro.num2.rt1316spk { ForAmps "2" Amp 2 Sel "R,R" }
++	Macro.num1.rt1316spk { ForAmps "1" Amp 1 Sel "L,R" }
++	Macro.num2.rt1316spk { ForAmps "2" Amp 1 Sel "L,L" }
++	Macro.num3.rt1316spk { ForAmps "2" Amp 2 Sel "R,R" }
+ 
+ 	EnableSequence [
+ 		cset "name='Speaker Switch' on"
+--- a/ucm2/sof-soundwire/rt1318.conf
++++ b/ucm2/sof-soundwire/rt1318.conf
+@@ -26,8 +26,9 @@
+ SectionDevice."Speaker" {
+ 	Comment	"Speaker"
+ 
+-	Macro.num1.rt1318spk { ForAmps "[12]" Amp 1 Sel "L,L" }
+-	Macro.num2.rt1318spk { ForAmps "2" Amp 2 Sel "R,R" }
++	Macro.num1.rt1318spk { ForAmps "1" Amp 1 Sel "L,R" }
++	Macro.num2.rt1318spk { ForAmps "2" Amp 1 Sel "L,L" }
++	Macro.num3.rt1318spk { ForAmps "2" Amp 2 Sel "R,R" }
+ 
+ 	EnableSequence [
+ 		cset "name='Speaker Switch' on"

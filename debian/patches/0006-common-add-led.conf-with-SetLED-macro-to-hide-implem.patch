@@ -1,0 +1,90 @@
+From 31fadae40cd704c56e477e57195f28158465cf7f Mon Sep 17 00:00:00 2001
+From: Jaroslav Kysela <perex@perex.cz>
+Date: Tue, 11 Mar 2025 11:09:29 +0100
+Subject: [PATCH] common: add led.conf with SetLED macro to hide implementation
+ details
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/517
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/31fadae40cd704c56e477e57195f28158465cf7f
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2106394
+Signed-off-by: Atlas Yu <atlas.yu@canonical.com>
+---
+ ucm2/common/ctl/led.conf | 65 ++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 65 insertions(+)
+ create mode 100644 ucm2/common/ctl/led.conf
+
+diff --git a/ucm2/common/ctl/led.conf b/ucm2/common/ctl/led.conf
+new file mode 100644
+index 0000000..f10ad87
+--- /dev/null
++++ b/ucm2/common/ctl/led.conf
+@@ -0,0 +1,65 @@
++#
++# Microphone/Speaker LED handling seems like an easy task, but
++# the expectations are different:
++#
++# Main question: Which state should LEDs follow (devices)?
++#
++# Case 1) set LEDs only for internal resources (speaker/microphone)
++# Case 2) set LEDs according the current stream (input/output)
++# Case 3) like case 1, but add analog headphones connected to laptop (analog jack)
++#
++# Discussion for Case 2: It is not possible to handle this in driver
++# (kernel). Usually, the sound server knowns the current stream (which may be routed to
++# bluetooth or a USB device, for example). Additionally, there is a security flaw if the
++# sound server directly controls the LEDs.
++#
++# Discussion for Case 3: Note that we have currently also USB/Bluetooth headphones which
++# do not follow this scenario. In this case, there is no clear LED mapping. It seems
++# that this case is somewhat controversional. Thus, analog headphones may be treated as
++# an external device.
++#
++# Result: For safety, simplicity and understable behaviour, only Case 1 should be
++# followed - LEDs should respond only to the internal (build-in) speaker output and
++# internal (build-in) microphone input in UCM.
++#
++
++#
++# Macro SetLED - attach or detach speaker or microphone LED to given control element
++#
++# Arguments:
++#   LED    - LED selection - "speaker" or "mic"
++#   Action - action for given control - "attach" or "detach"
++#   CtlId  - control identifier (as for amixer, e.g. "Capture Switch" or "name='CaptureSwitch',index=1")
++#
++
++DefineMacro.SetLED {
++	If.0 {
++		Condition {
++			Type String
++			Empty "${var:-SndCtlLedModprobe}"
++		}
++		True {
++			FixedBootSequence [
++				exec "-/sbin/modprobe snd_ctl_led"
++			]
++			Define.SndCtlLedModprobe ok
++		}
++	}
++	If.1 {
++		Condition { Type AlwaysTrue }
++		True.FixedBootSequence [
++			sysw "-/class/sound/ctl-led/${var:__LED}/card${CardNumber}/${var:__Action}:${var:__CtlId}"
++		]
++	}
++}
++
++#
++# Macro CtlNew - helper to create new control elemend
++#
++# Arguments:
++#   Arg    - string for cset-new
++#
++
++DefineMacro.CtlNew.FixedBootSequence [
++	cset-new "${var:__Arg}"
++]
+-- 
+2.47.2
+

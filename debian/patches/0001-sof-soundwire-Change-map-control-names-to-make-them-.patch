@@ -1,0 +1,93 @@
+From: Maciej Strozek <mstrozek@opensource.cirrus.com>
+Date: Thu, 17 Oct 2024 13:20:26 +0100
+Subject: sof-soundwire: Change map control names to make them unique and user
+ friendly
+
+Both 'Speaker Digital' and 'cs42l43 PDM2' names were found in other alsa
+controls, confusing the MixerElems paths. Make them unique to avoid errors for
+hardware mutes. Also add 'Capture' string into microphone controls to make
+them work properly.
+
+Link: https://lore.kernel.org/alsa-devel/20241017122027.1207373-1-mstrozek@opensource.cirrus.com/
+Signed-off-by: Maciej Strozek <mstrozek@opensource.cirrus.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commits/9864d624b27e3779d958138561e48f59287a124a
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2069760
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/codecs/cs42l43/init.conf          | 10 ++++++++--
+ ucm2/sof-soundwire/cs35l56-bridge.conf |  6 +++---
+ ucm2/sof-soundwire/cs42l43-dmic.conf   |  2 +-
+ ucm2/sof-soundwire/cs42l43.conf        |  3 ++-
+ 4 files changed, 14 insertions(+), 7 deletions(-)
+
+--- a/ucm2/codecs/cs42l43/init.conf
++++ b/ucm2/codecs/cs42l43/init.conf
+@@ -2,13 +2,19 @@
+ 
+ LibraryConfig.remap.Config {
+ 	ctl.default.map {
+-		"name='cs42l43 PDM2 Switch'" {
++		"name='cs42l43 Microphone Capture Switch'" {
+ 			"name='cs42l43 Decimator 3 Switch'".vindex.0 0
+ 			"name='cs42l43 Decimator 4 Switch'".vindex.1 0
+ 		}
+-		"name='cs42l43 PDM2 Volume'" {
++		"name='cs42l43 Microphone Capture Volume'" {
+ 			"name='cs42l43 Decimator 3 Volume'".vindex.0 0
+ 			"name='cs42l43 Decimator 4 Volume'".vindex.1 0
+ 		}
++		"name='cs42l43 Headset Microphone Capture Switch'" {
++			"name='cs42l43 Decimator 1 Switch'".vindex.0 0
++		}
++		"name='cs42l43 Headset Microphone Capture Volume'" {
++			"name='cs42l43 Decimator 1 Volume'".vindex.0 0
++		}
+ 	}
+ }
+--- a/ucm2/sof-soundwire/cs35l56-bridge.conf
++++ b/ucm2/sof-soundwire/cs35l56-bridge.conf
+@@ -2,11 +2,11 @@
+ 
+ LibraryConfig.remap.Config {
+ 	ctl.default.map {
+-		"name='Speaker Digital Switch'" {
++		"name='Speaker Playback Switch'" {
+ 			"name='AMPL Speaker Switch'".vindex.0 0
+ 			"name='AMPR Speaker Switch'".vindex.1 0
+ 		}
+-		"name='Speaker Digital Volume'" {
++		"name='Speaker Playback Volume'" {
+ 			"name='AMPL Speaker Volume'".vindex.0 0
+ 			"name='AMPR Speaker Volume'".vindex.1 0
+ 		}
+@@ -56,6 +56,6 @@
+ 		PlaybackPriority 100
+ 		PlaybackPCM "hw:${CardId},0"
+ 		PlaybackMixer "default:${CardId}"
+-		PlaybackMixerElem "Speaker Digital"
++		PlaybackMixerElem "Speaker"
+ 	}
+ }
+--- a/ucm2/sof-soundwire/cs42l43-dmic.conf
++++ b/ucm2/sof-soundwire/cs42l43-dmic.conf
+@@ -21,6 +21,6 @@
+ 		CapturePriority 100
+ 		CapturePCM "hw:${CardId},4"
+ 		CaptureMixer "default:${CardId}"
+-		CaptureMixerElem "cs42l43 PDM2"
++		CaptureMixerElem "cs42l43 Microphone"
+ 	}
+ }
+--- a/ucm2/sof-soundwire/cs42l43.conf
++++ b/ucm2/sof-soundwire/cs42l43.conf
+@@ -40,7 +40,8 @@
+ 	Value {
+ 		CapturePriority 200
+ 		CapturePCM "hw:${CardId},4"
+-		CaptureMixerElem "cs42l43 Decimator 1"
++		CaptureMixer "default:${CardId}"
++		CaptureMixerElem "cs42l43 Headset Microphone"
+ 		JackControl "Headset Mic Jack"
+ 	}
+ }

@@ -1,0 +1,55 @@
+From b6004419cff74da61213133d2ae35c29dc8447f7 Mon Sep 17 00:00:00 2001
+From: Jaroslav Kysela <perex@perex.cz>
+Date: Thu, 4 Dec 2025 16:54:45 +0100
+Subject: [PATCH] sof-soundwire: second fix for -sdca variants for multi-codec
+
+Example variables:
+
+	MultiCodec1='rt713'
+	HeadsetCodec1='rt713-sdca'
+
+Suggested-by: Shuming Fan <shumingf@realtek.com>
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/653
+Fixes: d6a783d ("sof-soundwire: fix for -sdca variants for multi-codec")
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: backport, https://github.com/alsa-project/alsa-ucm-conf/commit/b6004419cff74da61213133d2ae35c29dc8447f7
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2129952
+---
+ ucm2/sof-soundwire/sof-soundwire.conf | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+--- a/ucm2/sof-soundwire/sof-soundwire.conf
++++ b/ucm2/sof-soundwire/sof-soundwire.conf
+@@ -67,8 +67,8 @@
+ If.multi_speaker {
+ 	Condition {
+ 		Type RegexMatch
+-		Regex "(${var:SpeakerCodec1}(-sdca)?)"
+-		String "${var:MultiCodec1}"
++		Regex "(${var:MultiCodec1}(-sdca)?)"
++		String "${var:SpeakerCodec1}"
+ 	}
+ 	True {
+ 		Define.SpeakerCodec1 ""
+@@ -78,8 +78,8 @@
+ If.multi_mic {
+ 	Condition {
+ 		Type RegexMatch
+-		Regex "(${var:MicCodec1}(-sdca)?)"
+-		String "${var:MultiCodec1}"
++		Regex "(${var:MultiCodec1}(-sdca)?)"
++		String "${var:MicCodec1}"
+ 	}
+ 	True {
+ 		Define.MicCodec1 ""
+@@ -89,8 +89,8 @@
+ If.multi_headset {
+ 	Condition {
+ 		Type RegexMatch
+-		Regex "(${var:HeadsetCodec1}(-sdca)?)"
+-		String "${var:MultiCodec1}"
++		Regex "(${var:MultiCodec1}(-sdca)?)"
++		String "${var:HeadsetCodec1}"
+ 	}
+ 	True {
+ 		Define.HeadsetCodec1 ""

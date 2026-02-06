@@ -1,0 +1,169 @@
+From 6b2f0c14672bd64b295e8900de3a7282f94f1de3 Mon Sep 17 00:00:00 2001
+From: Shuming Fan <shumingf@realtek.com>
+Date: Thu, 1 Aug 2024 15:35:24 +0800
+Subject: [PATCH] ucm2: sof-soundwire: add rt712 VA device
+
+Add support headphone/headset mic/speaker/dmic for rt712 VA
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/435
+Signed-off-by: Shuming Fan <shumingf@realtek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: backport, https://github.com/alsa-project/alsa-ucm-conf/commit/6b2f0c14672bd64b295e8900de3a7282f94f1de3
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2129952
+---
+ ucm2/codecs/rt712-dmic/init.conf      |  6 ++
+ ucm2/codecs/rt712/init.conf           |  8 +++
+ ucm2/sof-soundwire/rt712-dmic.conf    | 21 +++++++
+ ucm2/sof-soundwire/rt712.conf         | 87 +++++++++++++++++++++++++++
+ ucm2/sof-soundwire/sof-soundwire.conf |  4 +-
+ 5 files changed, 124 insertions(+), 2 deletions(-)
+ create mode 100644 ucm2/codecs/rt712-dmic/init.conf
+ create mode 100644 ucm2/codecs/rt712/init.conf
+ create mode 100644 ucm2/sof-soundwire/rt712-dmic.conf
+ create mode 100644 ucm2/sof-soundwire/rt712.conf
+
+--- /dev/null
++++ b/ucm2/codecs/rt712-dmic/init.conf
+@@ -0,0 +1,6 @@
++# RT712-dmic specific volume control settings
++
++BootSequence [
++	cset "name='rt712-dmic ADC 25 Mux' 'DMIC1'"
++	cset "name='rt712-dmic FU1E Capture Switch' 1"
++]
+--- /dev/null
++++ b/ucm2/codecs/rt712/init.conf
+@@ -0,0 +1,8 @@
++# RT712 specific volume control settings
++
++BootSequence [
++	cset "name='rt712 FU05 Playback Volume' 87"
++	cset "name='rt712 ADC 23 Mux' 'MIC2'"
++	cset "name='rt712 FU0F Capture Volume' 57"
++	cset "name='rt712 FU0F Capture Switch' 1"
++]
+--- /dev/null
++++ b/ucm2/sof-soundwire/rt712-dmic.conf
+@@ -0,0 +1,21 @@
++# Use case Configuration for sof-soundwire card
++
++SectionDevice."Mic" {
++	Comment	"SoundWire microphones"
++
++	EnableSequence [
++		cset "name='rt712-dmic FU1E Capture Switch' 1"
++	]
++
++	DisableSequence [
++		cset "name='rt712-dmic FU1E Capture Switch' 0"
++	]
++
++	Value {
++		CapturePriority 100
++		CapturePCM "hw:${CardId},4"
++		CaptureSwitch "rt712-dmic FU1E Capture Switch"
++		CaptureVolume "rt712-dmic FU1E Capture Volume"
++		CaptureMixerElem "rt712-dmic FU1E"
++	}
++}
+--- /dev/null
++++ b/ucm2/sof-soundwire/rt712.conf
+@@ -0,0 +1,87 @@
++# Use case Configuration for sof-soundwire card
++
++If.codecspk {
++	Condition {
++		Type RegexMatch
++		Regex "(rt712(-sdca)?)"
++		String "${var:MultiSpeakerShadow}"
++	}
++	True {
++		SectionDevice."Speaker" {
++			Comment "Speaker"
++
++			If.lrswitch {
++				Condition {
++					Type ControlExists
++					Control "name='rt712 OT23 L Switch'"
++				}
++				True {
++					EnableSequence [
++						cset "name='rt712 OT23 L Switch' on"
++						cset "name='rt712 OT23 R Switch' on"
++						cset "name='Speaker Switch' on"
++					]
++					DisableSequence [
++						cset "name='rt712 OT23 L Switch' off"
++						cset "name='rt712 OT23 R Switch' off"
++						cset "name='Speaker Switch' off"
++					]
++				}
++				False {
++					EnableSequence [
++						cset "name='rt712 FU06 Switch' on"
++						cset "name='Speaker Switch' on"
++					]
++					DisableSequence [
++						cset "name='rt712 FU06 Switch' off"
++						cset "name='Speaker Switch' off"
++					]
++				}
++			}
++
++			Value {
++				PlaybackPriority 100
++				PlaybackPCM "hw:${CardId},2"
++			}
++		}
++	}
++}
++
++SectionDevice."Headphones" {
++	Comment	"Headphones"
++
++	EnableSequence [
++		cset "name='Headphone Switch' on"
++	]
++
++	DisableSequence [
++		cset "name='Headphone Switch' off"
++	]
++
++	Value {
++	      PlaybackPriority 200
++	      PlaybackPCM "hw:${CardId}"
++	      JackControl "Headphone Jack"
++	}
++}
++
++SectionDevice."Headset" {
++	Comment "Headset Mono Microphone"
++
++	EnableSequence [
++		cset "name='rt712 FU0F Capture Switch' on"
++	]
++
++	DisableSequence [
++		cset "name='rt712 FU0F Capture Switch' off"
++	]
++
++	Value {
++		CapturePriority 300
++		CapturePCM "hw:${CardId},1"
++		CaptureSwitch "rt712 FU0F Capture Switch"
++		CaptureVolume "rt712 FU0F Capture Volume"
++		CaptureMixerElem "rt712 FU0F"
++		JackControl "Headset Mic Jack"
++	}
++}
+--- a/ucm2/sof-soundwire/sof-soundwire.conf
++++ b/ucm2/sof-soundwire/sof-soundwire.conf
+@@ -45,7 +45,7 @@
+ 		String "${CardComponents}"
+ 	}
+ 	MultiCodec {
+-		Regex "(rt722(-sdca)?)"
++		Regex "(rt712|rt722(-sdca)?)"
+ 		String "${var:SpeakerCodec1} ${var:HeadsetCodec1} ${var:MicCodec1}"
+ 	}
+ }

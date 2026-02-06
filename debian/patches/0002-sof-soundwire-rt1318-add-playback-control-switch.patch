@@ -1,0 +1,65 @@
+From: Shuming Fan <shumingf@realtek.com>
+Date: Mon, 24 Mar 2025 14:43:44 +0800
+Subject: [PATCH] sof-soundwire: rt1318: add playback control switch
+
+This patch defines 'rt1318-1 DAC' as PlaybackMixerElem when equipped with only one amp
+and defines a remapped one 'rt1318 DAC Playback Switch' when using two amps.
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/525
+Signed-off-by: Shuming Fan <shumingf@realtek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/d627a0a9c860496f64f452a299e3f00ce9a6d20c.patch
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2100732
+Signed-off-by: Bin Li <binli@ubuntu.com>
+---
+ ucm2/codecs/rt1318/init.conf   | 21 +++++++++++++++++++++
+ ucm2/sof-soundwire/rt1318.conf |  2 ++
+ 2 files changed, 23 insertions(+)
+
+diff --git a/ucm2/codecs/rt1318/init.conf b/ucm2/codecs/rt1318/init.conf
+index a31b41d..30c64d6 100644
+--- a/ucm2/codecs/rt1318/init.conf
++++ b/ucm2/codecs/rt1318/init.conf
+@@ -1,5 +1,26 @@
+ # RT1318 specific switch control settings
+ 
++Define.SpeakerMixerElem "rt1318-1 DAC"
++
++If.twoAmpsStereoToOne {
++	Condition {
++		Type RegexMatch
++		Regex "2"
++		String "${var:SpeakerAmps}"
++	}
++	True {
++		Define.SpeakerMixerElem "rt1318 DAC"
++		LibraryConfig.remap.Config {
++			ctl.default.map {
++				"name='rt1318 DAC Playback Switch'" {
++					"name='rt1318-1 DAC Switch'".vindex.0 [ 0 1 ]
++					"name='rt1318-2 DAC Switch'".vindex.1 [ 0 1 ]
++				}
++			}
++		}
++	}
++}
++
+ If.oneAmp {
+ 	Condition {
+ 		Type ControlExists
+diff --git a/ucm2/sof-soundwire/rt1318.conf b/ucm2/sof-soundwire/rt1318.conf
+index 9d01886..c8f9146 100644
+--- a/ucm2/sof-soundwire/rt1318.conf
++++ b/ucm2/sof-soundwire/rt1318.conf
+@@ -41,5 +41,7 @@ SectionDevice."Speaker" {
+ 	Value {
+ 	      PlaybackPriority 100
+ 	      PlaybackPCM "hw:${CardId},2"
++	      PlaybackMixer "default:${CardId}"
++	      PlaybackMixerElem "${var:SpeakerMixerElem}"
+ 	}
+ }
+-- 
+2.47.2
+

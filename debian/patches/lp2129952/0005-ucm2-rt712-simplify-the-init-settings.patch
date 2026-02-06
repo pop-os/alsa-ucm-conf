@@ -1,0 +1,61 @@
+From 99e50c916f4ada069ac32636b52c389711b858c4 Mon Sep 17 00:00:00 2001
+From: Shuming Fan <shumingf@realtek.com>
+Date: Mon, 3 Nov 2025 18:37:57 +0800
+Subject: [PATCH] ucm2: rt712: simplify the init settings
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/628
+Signed-off-by: Shuming Fan <shumingf@realtek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: backport, https://github.com/alsa-project/alsa-ucm-conf/commit/99e50c916f4ada069ac32636b52c389711b858c4
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2129952
+---
+ ucm2/codecs/rt712/init.conf | 35 ++++++++++++++---------------------
+ 1 file changed, 14 insertions(+), 21 deletions(-)
+
+--- a/ucm2/codecs/rt712/init.conf
++++ b/ucm2/codecs/rt712/init.conf
+@@ -1,30 +1,23 @@
+ # RT712 specific volume control settings
+ 
+-If.rt712_init {
++BootSequence [
++	cset "name='rt712 FU05 Playback Volume' 87"
++	cset "name='rt712 ADC 23 Mux' 'MIC2'"
++	cset "name='rt712 FU0F Capture Volume' 57"
++	cset "name='rt712 FU0F Capture Switch' 1"
++]
++
++If.rt712vb_init {
+ 	Condition {
+ 		Type RegexMatch
+ 		Regex "(rt712(-sdca)?)"
+ 		String "${var:MultiMicShadow}"
+ 	}
+-	True {
++	True.BootSequence [
+ 		# RT712-VB integrated with DMIC
+-		BootSequence [
+-			cset "name='rt712 FU05 Playback Volume' 87"
+-			cset "name='rt712 ADC 23 Mux' 'MIC2'"
+-			cset "name='rt712 FU0F Capture Volume' 57"
+-			cset "name='rt712 FU0F Capture Switch' 1"
+-			cset "name='rt712 FU1E Capture Switch' 1"
+-			cset "name='rt712 FU1E Capture Volume' 47"
+-			cset "name='rt712 ADC 0A Mux' 'DMIC1'"
+-			cset "name='rt712 ADC 0B Mux' 'DMIC2'"
+-		]
+-	}
+-	False {
+-		BootSequence [
+-			cset "name='rt712 FU05 Playback Volume' 87"
+-			cset "name='rt712 ADC 23 Mux' 'MIC2'"
+-			cset "name='rt712 FU0F Capture Volume' 57"
+-			cset "name='rt712 FU0F Capture Switch' 1"
+-		]
+-	}
++		cset "name='rt712 FU1E Capture Switch' 1"
++		cset "name='rt712 FU1E Capture Volume' 47"
++		cset "name='rt712 ADC 0A Mux' 'DMIC1'"
++		cset "name='rt712 ADC 0B Mux' 'DMIC2'"
++	]
+ }

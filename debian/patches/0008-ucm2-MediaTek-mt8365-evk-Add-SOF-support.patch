@@ -1,0 +1,425 @@
+From 13f9628368ea8bc1f7c435df7cfa36271fb6c0a3 Mon Sep 17 00:00:00 2001
+From: Zoran Zhan <zoran.zhan@mediatek.com>
+Date: Wed, 7 May 2025 14:41:14 +0800
+Subject: [PATCH 8/9] ucm2: MediaTek: mt8365-evk: Add SOF support
+
+Add support for MT8365 EVK with SOF enabled. When SOF is
+disabled, the "HiFi" use case is used; when SOF is enabled,
+the "SOF" use case is used.
+
+The main difference compared to the UCM with SOF disabled is
+the device number for playback and capture, which now uses the
+PCMs for SOF instead.
+
+Define these parameters as variables for each case (with and
+without SOF), and move the common initialization to init.conf,
+so the UCM can be shared by both configurations.
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/583
+Signed-off-by: Zoran Zhan <zoran.zhan@mediatek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+---
+ ucm2/MediaTek/mt8365-evk/HiFi.conf            | 126 ++++++------------
+ ucm2/MediaTek/mt8365-evk/init.conf            |  31 +++++
+ ucm2/MediaTek/mt8365-evk/mt8365-evk.conf      |  40 +-----
+ ucm2/MediaTek/mt8365-evk/sof/SOF.conf         |  87 ++++++++++++
+ .../mt8365-evk/sof/sof-mt8365-evk.conf        |   9 ++
+ .../conf.d/sof-mt8365-evk/sof-mt8365-evk.conf |   1 +
+ 6 files changed, 174 insertions(+), 120 deletions(-)
+ create mode 100644 ucm2/MediaTek/mt8365-evk/init.conf
+ create mode 100644 ucm2/MediaTek/mt8365-evk/sof/SOF.conf
+ create mode 100644 ucm2/MediaTek/mt8365-evk/sof/sof-mt8365-evk.conf
+ create mode 120000 ucm2/conf.d/sof-mt8365-evk/sof-mt8365-evk.conf
+
+diff --git a/ucm2/MediaTek/mt8365-evk/HiFi.conf b/ucm2/MediaTek/mt8365-evk/HiFi.conf
+index 81f563f..83514c7 100644
+--- a/ucm2/MediaTek/mt8365-evk/HiFi.conf
++++ b/ucm2/MediaTek/mt8365-evk/HiFi.conf
+@@ -1,141 +1,97 @@
+ SectionDevice."HDMI" {
+-	Comment "Hdmi output"
++	Comment "HDMI output"
+ 
+ 	Value {
+-		PlaybackPriority 250
++		PlaybackPriority 100
+ 		PlaybackChannels 2
+ 		PlaybackPCM "hw:${CardId},1"
+ 	}
+-
+-	EnableSequence [
+-		cset "name='O00 I07 Switch' on"
+-		cset "name='O01 I08 Switch' on"
+-	]
+-
+-	DisableSequence [
+-		cset "name='O00 I07 Switch' off"
+-		cset "name='O01 I08 Switch' off"
+-	]
+ }
+ 
+ SectionDevice."Speaker" {
+-	Comment "Line-out Jack "
++	Comment "Lineout speaker"
+ 
+ 	ConflictingDevice [
+ 		"Headphones"
+ 	]
+ 
+-	Value {
+-		PlaybackPriority 300
+-		PlaybackChannels 2
+-		PlaybackPCM "hw:${CardId},0"
+-		PlaybackVolume "name='Lineout_PGAL_GAIN'"
+-	}
+-
+ 	EnableSequence [
+-		cset "name='Audio_Amp_L_Switch' Off"
+-		cset "name='Audio_Amp_R_Switch' Off"
+-		cset "name='Lineout_PGAL_GAIN' 0"
+-		cset "name='Speaker_Amp_Switch' On"
++		cset "name='Headphone Left Source' Open"
++		cset "name='Headphone Right Source' Open"
++		cset "name='Line Out Source' Playback"
+ 	]
+ 
+-	DisableSequence [
+-		cset "name='Audio_Amp_L_Switch' On"
+-		cset "name='Audio_Amp_R_Switch' On"
+-		cset "name='Speaker_Amp_Switch' Off"
+-	]
++	Value {
++		PlaybackPriority 200
++		PlaybackChannels 2
++		PlaybackPCM "hw:${CardId},${var:PlayDevN}"
++	}
+ }
+ 
+ SectionDevice."Headphones" {
+-	Comment "Headset speakers"
++	Comment "Earphone speaker"
+ 
+ 	ConflictingDevice [
+ 		"Speaker"
+ 	]
+ 
++	EnableSequence [
++		cset "name='Headphone Left Source' DAC"
++		cset "name='Headphone Right Source' DAC"
++		cset "name='Line Out Source' Open"
++	]
++
+ 	Value {
+ 		PlaybackPriority 300
+ 		PlaybackChannels 2
+-		PlaybackPCM "hw:${CardId},0"
+-		PlaybackVolume "name='Headset_PGAL_GAIN'"
++		PlaybackPCM "hw:${CardId},${var:PlayDevN}"
+ 	}
+-
+-	EnableSequence [
+-		cset "name='Audio_Amp_L_Switch' On"
+-		cset "name='Audio_Amp_R_Switch' On"
+-		cset "name='Headset_PGAL_GAIN' 1"
+-		cset "name='Speaker_Amp_Switch' Off"
+-	]
+-
+-	DisableSequence [
+-		cset "name='Audio_Amp_L_Switch' Off"
+-		cset "name='Audio_Amp_R_Switch' Off"
+-		cset "name='Speaker_Amp_Switch' On"
+-	]
+ }
+ 
+-SectionDevice."Mic1" {
+-	Comment "Amic"
++SectionDevice."Headset" {
++	Comment "Earphone microphone"
+ 
+ 	ConflictingDevice [
+-		"Mic2"
++		"Mic1"
+ 	]
+ 
+-	Value {
+-		CapturePriority 300
+-		CaptureChannels 1
+-		CapturePCM "hw:${CardId},2"
+-	}
+-
+ 	EnableSequence [
+-		cset "name='Audio_MicSource1_Setting' ADC1"
+-		cset "name='Audio_MICBIAS0_Switch' Off"
++		cset "name='PGA L Mux' AIN1"
++		cset "name='PGA R Mux' AIN1"
+ 	]
+ 
+-	DisableSequence [
+-		cset "name='Audio_MicSource1_Setting' ADC2"
+-		cset "name='Audio_MICBIAS0_Switch' On"
+-	]
++	Value {
++		CapturePriority 300
++		CaptureChannels "${var:CapChanN}"
++		CapturePCM "hw:${CardId},${var:CapDevN}"
++	}
+ }
+ 
+-SectionDevice."Mic2" {
+-	Comment "Headset microphone"
++SectionDevice."Mic1" {
++	Comment "Analog microphone"
+ 
+ 	ConflictingDevice [
+-		"Mic1"
++		"Headset"
+ 	]
+ 
+-	Value {
+-		CapturePriority 350
+-		CaptureChannels 1
+-		CapturePCM "hw:${CardId},2"
+-	}
+-
+ 	EnableSequence [
+-		cset "name='Audio_MicSource1_Setting' ADC2"
+-		cset "name='Audio_MICBIAS0_Switch' On"
++		cset "name='PGA L Mux' AIN0"
++		cset "name='PGA R Mux' AIN0"
+ 	]
+ 
+-	DisableSequence [
+-		cset "name='Audio_MicSource1_Setting' ADC1"
+-		cset "name='Audio_MICBIAS0_Switch' Off"
+-	]
++	Value {
++		CapturePriority 200
++		CaptureChannels "${var:CapChanN}"
++		CapturePCM "hw:${CardId},${var:CapDevN}"
++	}
+ }
+ 
+-SectionDevice."Mic3" {
+-	Comment "PDM microphones"
++SectionDevice."Mic2" {
++	Comment "Digital microphone"
+ 
+ 	Value {
+ 		CapturePriority 100
+ 		CaptureChannels 2
+ 		CapturePCM "hw:${CardId},3"
+ 	}
+-
+-	EnableSequence [
+-		cset "name='Audio_MICBIAS0_Switch' On"
+-	]
+-
+-	DisableSequence [
+-		cset "name='Audio_MICBIAS0_Switch' Off"
+-	]
+ }
+diff --git a/ucm2/MediaTek/mt8365-evk/init.conf b/ucm2/MediaTek/mt8365-evk/init.conf
+new file mode 100644
+index 0000000..269530a
+--- /dev/null
++++ b/ucm2/MediaTek/mt8365-evk/init.conf
+@@ -0,0 +1,31 @@
++Syntax 4
++
++SectionUseCase."HiFi" {
++	File "/MediaTek/mt8365-evk/HiFi.conf"
++	Comment "Default"
++}
++
++SectionUseCase."SOF" {
++	File "/MediaTek/mt8365-evk/sof/SOF.conf"
++	Comment "Enable SOF"
++}
++
++BootSequence [
++	cset "name='Headphone Left Source' DAC"
++	cset "name='Headphone Right Source' DAC"
++	cset "name='Line Out Source' Open"
++	cset "name='PGA L Mux' AIN1"
++	cset "name='PGA R Mux' AIN1"
++	cset "name='Mic Type Mux' DCC"
++	cset "name='INT ADDA O03_O04 Switch' on"
++	cset "name='Headphone Volume' 10"
++	cset "name='Lineout Volume' 10"
++	cset "name='O00 I07 Switch' on"
++	cset "name='O01 I08 Switch' on"
++	cset "name='O03 I05 Switch' on"
++	cset "name='O04 I06 Switch' on"
++	cset "name='O05 I03 Switch' on"
++	cset "name='O06 I04 Switch' on"
++	cset "name='O09 I14 Switch' on"
++	cset "name='O10 I15 Switch' on"
++]
+diff --git a/ucm2/MediaTek/mt8365-evk/mt8365-evk.conf b/ucm2/MediaTek/mt8365-evk/mt8365-evk.conf
+index e396f8c..9df5644 100644
+--- a/ucm2/MediaTek/mt8365-evk/mt8365-evk.conf
++++ b/ucm2/MediaTek/mt8365-evk/mt8365-evk.conf
+@@ -1,39 +1,9 @@
+ Syntax 4
+ 
+-SectionUseCase."HiFi" {
+-	File "/MediaTek/mt8365-evk/HiFi.conf"
+-	Comment "Play high quality music"
++Define {
++	PlayDevN "0"
++	CapDevN "2"
++	CapChanN "1"
+ }
+ 
+-BootSequence [
+-	#Audio volume
+-	cset "name='Headset_PGAL_GAIN' 0"
+-	cset "name='Lineout_PGAL_GAIN' 0"
+-
+-	#Audio amp
+-	cset "name='Audio_Amp_R_Switch' On"
+-	cset "name='Audio_Amp_L_Switch' On"
+-
+-	#Headset out
+-	cset "name='Speaker_Amp_Switch' Off"
+-
+-	#Dmic
+-	cset "name='Audio_MICBIAS0_Switch' On"
+-
+-	#HDMI audio (I2S3 Out)
+-	cset "name='O00 I07 Switch' on"
+-	cset "name='O01 I08 Switch' on"
+-
+-	#jack_mic Headset In
+-	cset "name='Audio_MicSource1_Setting' ADC2"
+-
+-	cset "name='O03 I05 Switch' on"
+-	cset "name='O04 I06 Switch' on"
+-	cset "name='O05 I03 Switch' on"
+-	cset "name='O06 I04 Switch' on"
+-	cset "name='O09 I14 Switch' on"
+-	cset "name='O10 I15 Switch' on"
+-	cset "name='AUD_CLK_BUF_Switch' On"
+-	cset "name='Audio_ADC_1_Switch' On"
+-	cset "name='INT ADDA O03_O04 Switch' on"
+-]
++Include.init.File "/MediaTek/mt8365-evk/init.conf"
+diff --git a/ucm2/MediaTek/mt8365-evk/sof/SOF.conf b/ucm2/MediaTek/mt8365-evk/sof/SOF.conf
+new file mode 100644
+index 0000000..af44feb
+--- /dev/null
++++ b/ucm2/MediaTek/mt8365-evk/sof/SOF.conf
+@@ -0,0 +1,87 @@
++SectionDevice."Speaker" {
++	Comment "SOF Lineout speaker"
++
++	ConflictingDevice [
++		"Headphones"
++	]
++
++	EnableSequence [
++		cset "name='Headphone Left Source' Open"
++		cset "name='Headphone Right Source' Open"
++		cset "name='Line Out Source' Playback"
++	]
++
++	Value {
++		PlaybackPriority 100
++		PlaybackChannels 2
++		PlaybackPCM "hw:${CardId},${var:PlayDevN}"
++	}
++}
++
++SectionDevice."Headphones" {
++	Comment "SOF Earphone speaker"
++
++	ConflictingDevice [
++		"Speaker"
++	]
++
++	EnableSequence [
++		cset "name='Headphone Left Source' DAC"
++		cset "name='Headphone Right Source' DAC"
++		cset "name='Line Out Source' Open"
++	]
++
++	Value {
++		PlaybackPriority 200
++		PlaybackChannels 2
++		PlaybackPCM "hw:${CardId},${var:PlayDevN}"
++	}
++}
++
++SectionDevice."Headset" {
++	Comment "SOF Earphone microphone"
++
++	ConflictingDevice [
++		"Mic1"
++	]
++
++	EnableSequence [
++		cset "name='PGA L Mux' AIN1"
++		cset "name='PGA R Mux' AIN1"
++	]
++
++	Value {
++		CapturePriority 300
++		CaptureChannels "${var:CapChanN}"
++		CapturePCM "hw:${CardId},${var:CapDevN}"
++	}
++}
++
++SectionDevice."Mic1" {
++	Comment "SOF Analog microphone"
++
++	ConflictingDevice [
++		"Headset"
++	]
++
++	EnableSequence [
++		cset "name='PGA L Mux' AIN0"
++		cset "name='PGA R Mux' AIN0"
++	]
++
++	Value {
++		CapturePriority 200
++		CaptureChannels "${var:CapChanN}"
++		CapturePCM "hw:${CardId},${var:CapDevN}"
++	}
++}
++
++SectionDevice."Mic2" {
++	Comment "SOF Digital microphone"
++
++	Value {
++		CapturePriority 100
++		CaptureChannels 2
++		CapturePCM "hw:${CardId},19"
++	}
++}
+diff --git a/ucm2/MediaTek/mt8365-evk/sof/sof-mt8365-evk.conf b/ucm2/MediaTek/mt8365-evk/sof/sof-mt8365-evk.conf
+new file mode 100644
+index 0000000..6369aac
+--- /dev/null
++++ b/ucm2/MediaTek/mt8365-evk/sof/sof-mt8365-evk.conf
+@@ -0,0 +1,9 @@
++Syntax 4
++
++Define {
++	PlayDevN "16"
++	CapDevN "18"
++	CapChanN "2"
++}
++
++Include.init.File "/MediaTek/mt8365-evk/init.conf"
+diff --git a/ucm2/conf.d/sof-mt8365-evk/sof-mt8365-evk.conf b/ucm2/conf.d/sof-mt8365-evk/sof-mt8365-evk.conf
+new file mode 120000
+index 0000000..527f25f
+--- /dev/null
++++ b/ucm2/conf.d/sof-mt8365-evk/sof-mt8365-evk.conf
+@@ -0,0 +1 @@
++../../MediaTek/mt8365-evk/sof/sof-mt8365-evk.conf
+\ No newline at end of file
+-- 
+2.43.0
+

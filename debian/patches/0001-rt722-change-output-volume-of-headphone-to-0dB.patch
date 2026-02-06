@@ -1,0 +1,25 @@
+From: Shuming Fan <shumingf@realtek.com>
+Date: Tue, 14 Jan 2025 13:46:54 +0800
+Subject: [PATCH] rt722: change output volume of headphone to 0dB
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/496
+Signed-off-by: Shuming Fan <shumingf@realtek.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/a7d14e5646815d5830f10cce289258faf18a1dd8.patch
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2106464
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+---
+ ucm2/codecs/rt722/init.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/ucm2/codecs/rt722/init.conf
++++ b/ucm2/codecs/rt722/init.conf
+@@ -6,7 +6,7 @@
+ 	cset "name='rt722 ADC 22 Mux' 'MIC2'"
+ 	cset "name='rt722 FU1E Capture Volume' 63"
+ 	cset "name='rt722 FU06 Playback Volume' 60"
+-	cset "name='rt722 FU05 Playback Volume' 35"
++	cset "name='rt722 FU05 Playback Volume' 87"
+ 	cset "name='rt722 FU0F Capture Volume' 63"
+ ]
+ 

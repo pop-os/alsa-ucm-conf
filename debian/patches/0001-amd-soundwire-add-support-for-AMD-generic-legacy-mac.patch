@@ -1,0 +1,42 @@
+From: Jaroslav Kysela <perex@perex.cz>
+Date: Fri, 29 Nov 2024 14:17:57 +0100
+Subject: [PATCH] amd-soundwire: add support for AMD generic legacy machine
+ driver
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/478
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/470
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/0782bf435b8332833e7b3fc91501d78473dd6edf.patch
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2089273
+Signed-off-by: Chris Chiu <chris.chiu@canonical.com>
+Signed-off-by: Atlas Yu <atlas.yu@canonical.com>
+---
+ ucm2/conf.d/amd-soundwire/amd-soundwire.conf |  1 +
+ ucm2/sof-soundwire/rt722.conf                | 15 +++++++++++++++
+ 2 files changed, 16 insertions(+)
+ create mode 120000 ucm2/conf.d/amd-soundwire/amd-soundwire.conf
+
+--- a/ucm2/sof-soundwire/rt722.conf
++++ b/ucm2/sof-soundwire/rt722.conf
+@@ -86,6 +86,21 @@
+ 		cset "name='rt722 FU0F Capture Switch' 0"
+ 	]
+ 
++	If.hsmicsw {
++		Condition {
++			Type ControlExists
++			Control "name='Headset Mic Switch'"
++		}
++		True {
++			EnableSequence [
++				cset "name='Headset Mic Switch' on"
++			]
++			DisableSequence [
++				cset "name='Headset Mic Switch' off"
++			]
++		}
++	}
++
+ 	Value {
+ 		CapturePriority 200
+ 		CapturePCM "hw:${CardId},1"

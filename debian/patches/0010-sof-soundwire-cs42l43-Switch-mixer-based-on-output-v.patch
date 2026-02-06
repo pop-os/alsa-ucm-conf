@@ -1,0 +1,80 @@
+From ff1184ae23002be8aa00da6a5b586db50f37dd9d Mon Sep 17 00:00:00 2001
+From: Maciej Strozek <mstrozek@opensource.cirrus.com>
+Date: Wed, 2 Apr 2025 15:48:35 +0100
+Subject: [PATCH 227/237] sof-soundwire: cs42l43: Switch mixer based on output
+ volume
+
+Hardware volume control in cs42l43 can go up to +31.5dB which can
+cause audio degradation. For best results, limit hardware volume to 0dB.
+
+The application may request >0dB mixer volume controls using
+'@OutMix>0dB' variable passed to snd_use_case_mgr_open().
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/540
+Link: https://gitlab.freedesktop.org/pipewire/pipewire/-/issues/4622
+Signed-off-by: Maciej Strozek <mstrozek@opensource.cirrus.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/ff1184ae23002be8aa00da6a5b586db50f37dd9d
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2106394
+Signed-off-by: Atlas Yu <atlas.yu@canonical.com>
+---
+ ucm2/codecs/cs42l43/init.conf       | 14 ++++++++++++++
+ ucm2/sof-soundwire/cs42l43-spk.conf | 16 +++++++++++++++-
+ 2 files changed, 29 insertions(+), 1 deletion(-)
+
+diff --git a/ucm2/codecs/cs42l43/init.conf b/ucm2/codecs/cs42l43/init.conf
+index c0fa863..7fa9cf1 100644
+--- a/ucm2/codecs/cs42l43/init.conf
++++ b/ucm2/codecs/cs42l43/init.conf
+@@ -8,5 +8,19 @@ LibraryConfig.remap.Config {
+ 		"name='cs42l43 Headset Microphone Capture Volume'" {
+ 			"name='cs42l43 Decimator 1 Volume'".vindex.0 0
+ 		}
++		"name='cs42l43 Speaker Playback Switch'" {
++			"name='cs42l43 Speaker Digital Switch'".vindex.0 0
++			"name='cs42l43 Speaker Digital Switch'".vindex.1 1
++		}
++	}
++}
++
++If.0 {
++	Condition {
++		Type String
++		Empty "${var:-@OutMix>0dB}"
+ 	}
++	True.BootSequence [
++		cset "name='cs42l43 Speaker Digital Volume' 128"
++	]
+ }
+diff --git a/ucm2/sof-soundwire/cs42l43-spk.conf b/ucm2/sof-soundwire/cs42l43-spk.conf
+index 693c450..48efa51 100644
+--- a/ucm2/sof-soundwire/cs42l43-spk.conf
++++ b/ucm2/sof-soundwire/cs42l43-spk.conf
+@@ -17,9 +17,23 @@ SectionDevice."Speaker" {
+ 		cset "name='cs42l43 Speaker R Input 1' 'None'"
+ 	]
+ 
++
++	If.0 {
++		Condition {
++			Type String
++			Empty "${var:-@OutMix>0dB}"
++		}
++		True.Value {
++			PlaybackMixer "default:${CardId}"
++			PlaybackMixerElem "cs42l43 Speaker"
++		}
++		False.Value {
++			PlaybackMixerElem "cs42l43 Speaker Digital"
++		}
++	}
++
+ 	Value {
+ 		PlaybackPriority 100
+ 		PlaybackPCM "hw:${CardId},2"
+-		PlaybackMixerElem "cs42l43 Speaker Digital"
+ 	}
+ }
+-- 
+2.47.2
+

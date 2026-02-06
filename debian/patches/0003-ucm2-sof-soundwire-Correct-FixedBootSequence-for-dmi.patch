@@ -1,0 +1,47 @@
+From 003201356388692525a60bbd0da359f97aac99f3 Mon Sep 17 00:00:00 2001
+From: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+Date: Tue, 10 Dec 2024 11:04:31 +0200
+Subject: [PATCH 157/237] ucm2: sof-soundwire: Correct FixedBootSequence for
+ dmic info
+
+Replace the curly brackets with square brackets.
+The curly ones break the FixedBootSequence parsing by resetting the
+sequence.
+If the /var/lib/alsa/card0.conf.d is not present then UCM will fail because
+all sequences before the dmic is lost, including the card-init:
+
+# alsactl init
+alsa-lib main.c:619:(execute_cfgsave) unable to open file '/var/lib/alsa/card0.conf.d/42-sof-hdmi.conf': No such file or directory
+alsa-lib main.c:2456:(set_fixedboot_user) Unable to execute force boot sequence
+
+The full sequence supposed to be:
+card-init
+ctl-remap
+cs42l43
+dmic
+hdmi
+
+Closes: https://github.com/alsa-project/alsa-ucm-conf/pull/485
+Fixes: 9fa70add7638 ("sof-hda-dsp,sof-soundwire: add CaptureMicInfoFile fields for dmics")
+Signed-off-by: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+Signed-off-by: Jaroslav Kysela <perex@perex.cz>
+Origin: upstream, https://github.com/alsa-project/alsa-ucm-conf/commit/003201356388692525a60bbd0da359f97aac99f3
+Bug-Ubuntu: https://bugs.launchpad.net/bugs/2106394
+Signed-off-by: Atlas Yu <atlas.yu@canonical.com>
+---
+ ucm2/sof-soundwire/sof-soundwire.conf | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- a/ucm2/sof-soundwire/sof-soundwire.conf
++++ b/ucm2/sof-soundwire/sof-soundwire.conf
+@@ -159,8 +159,8 @@
+ 		Type String
+ 		Empty "${var:Mics1}"
+ 	}
+-	False.FixedBootSequence {
++	False.FixedBootSequence [
+ 		 # dmic array info
+ 		exec "-nhlt-dmic-info -o ${var:LibDir}/dmics-nhlt.json"
+-	}
++	]
+ }
