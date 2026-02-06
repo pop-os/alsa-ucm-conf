@@ -1,3 +1,9 @@
+alsa-ucm-conf (1.2.10-1ubuntu5.9pop0) noble; urgency=medium
+
+  * Pop!_OS patches
+
+ -- Jeremy Soller <jeremy@system76.com>  Fri, 06 Feb 2026 12:08:02 -0700
+
 alsa-ucm-conf (1.2.10-1ubuntu5.9) noble; urgency=medium
 
   * Support Realtek audio solution ALC3329B+ALC1708B (LP: #2129952)
